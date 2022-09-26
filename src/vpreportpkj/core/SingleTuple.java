@@ -15,6 +15,7 @@ public class SingleTuple {
     String roll;
     double length;
     int duration;
+    int holeCount;
     double mass;
 
     public static SingleTuple generateTuple(String line){
@@ -29,6 +30,7 @@ public class SingleTuple {
         st.completeTime = getDate(date, time);
         st.order = splitData.get(1);
         st.mark = splitData.get(3);
+        st.holeCount = Integer.parseInt(splitData.get(15));
         st.position = splitData.get(2);
         st.mass = Double.parseDouble(splitData.get(9));
         st.length = Double.parseDouble(splitData.get(5));
@@ -99,5 +101,9 @@ public class SingleTuple {
 
     public double getMass() {
         return mass;
+    }
+
+    public int getHoleCount() {
+        return holeCount;
     }
 }

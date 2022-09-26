@@ -9,14 +9,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class EntryPoint {
     static int singleRBTime = 50;
+    static int maxScanDepth = 6;
 
     public static void main(String[] args) {
-        //String path = "C:\\IntellijProj\\VPReport\\src\\20_09_2022.txt";
+        String path = "C:\\IntellijProj\\VPReport\\src\\20_09_2022.txt";
         String path2 = "C:\\VPReportsTest\\14_08_2022.txt";
-        String rep = getReport(path2);
+        String rep = getReport(path);
         System.out.println(rep);
     }
 
@@ -32,6 +34,19 @@ public class EntryPoint {
         }
     }
 
+    /**
+     * Метод сортирует кортежи по дате начала выполнения операции (содержащейся в кортеже). Предназначен для того,
+     * чтоб исключить возможность перекрытия "потерянного" промежутка кортежами, отстоящими от текущего
+     * дальше чем следующий (тупое объяснение, но лучшую формулировку сложно придумать)
+     * @param inputList входящий неотсортированный кортеж
+     * @return исходящий отсортированный кортеж
+     */
+    public static List<SingleTuple> sortTuples(List<SingleTuple> inputList){
+        return inputList.stream()
+                .sorted((t1, t2) -> (int) (t1.getStartTime().getTime() - t2.getStartTime().getTime()))
+                .collect(Collectors.toList());
+    }
+
     public static String getReport(String path) {
 
         StringBuilder sb = new StringBuilder("Report generated at: " + new Date() + '\n');
@@ -44,6 +59,17 @@ public class EntryPoint {
         for (String sign : strArr) {
             tuples.add(SingleTuple.generateTuple(sign));
         }
+
+        tuples = sortTuples(tuples);
+
+        //System.out.println(tuples);
+
+        //подсчет отверстий
+        int holes = 0;
+        for (SingleTuple tuple : tuples) {
+            holes = holes + tuple.getHoleCount();
+        }
+        System.out.println("Total holes: " + holes);
 
         long idleTime = 0;
         int carriageRollbacks = 0;
@@ -73,6 +99,15 @@ public class EntryPoint {
             }
         }
 
+        //false starts
+        for (int i = 0; i < tuples.size() - 1; i++) {
+            Date startThis = tuples.get(i).getStartTime();
+            Date startNext = tuples.get(i + 1).getStartTime();
+            if (startThis.after(startNext)) {
+                System.out.println("false start detected between lines " + (i + 1) + " and " + (i + 2));
+            }
+        }
+
         //triple overlaying
         boolean detected = false;
         for (int i = 0; i < tuples.size() - 3; i++) {
@@ -96,12 +131,12 @@ public class EntryPoint {
         long dealTime = operationTime + (long) carriageRollbacks * singleRBTime;
 
         sb.append("Total uptime, min: ").append(uptime / 60).append('\n')
-        .append("Total idle, min: ").append(idleTime / 60).append('\n')
-        .append("Operation time, min: ").append(operationTime / 60).append('\n')
-        .append("Carriage rollbacks (estimated): ").append(carriageRollbacks).append('\n')
-        .append("Deal time, min: ").append(dealTime / 60).append('\n')
-        .append("Workload, %, by opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
-        .append("Workload, %, by deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n');
+                .append("Total idle, min: ").append(idleTime / 60).append('\n')
+                .append("Operation time, min: ").append(operationTime / 60).append('\n')
+                .append("Carriage rollbacks (estimated): ").append(carriageRollbacks).append('\n')
+                .append("Deal time, min: ").append(dealTime / 60).append('\n')
+                .append("Workload, %, by opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
+                .append("Workload, %, by deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n');
         return sb.toString();
     }
 }
