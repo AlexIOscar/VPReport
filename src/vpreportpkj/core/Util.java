@@ -1,10 +1,12 @@
 package vpreportpkj.core;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Util {
     public static List<List<SingleTuple>> splitPeriods(List<SingleTuple> input, int[] splitHours,
@@ -23,8 +25,6 @@ public class Util {
         int enYear = cal.get(Calendar.YEAR);
         int enMonth = cal.get(Calendar.MONTH);
         int enDay = cal.get(Calendar.DAY_OF_MONTH);
-        System.out.println("start: year: " + stYear + "; month: " + stMonth + "; day:" + stDay);
-        System.out.println("end: year: " + enYear + "; month: " + enMonth + "; day:" + enDay);
 
         List<Date> splitPoints = new ArrayList<>();
 
@@ -41,8 +41,6 @@ public class Util {
         }
         //far-far future comes...
         splitPoints.add(new Date(Long.MAX_VALUE));
-
-        System.out.println(splitPoints);
 
         List<List<SingleTuple>> output = new ArrayList<>();
 
@@ -64,8 +62,15 @@ public class Util {
         }
         //сливаем накопленный буфер, поскольку в цикле никогда не наступит условие слива последнего буфера
         output.add(buffer);
+        //clearing empty shifts
+        output = output.stream().filter(s -> !s.isEmpty()).collect(Collectors.toList());
 
         return output;
+    }
+
+    public static List<List<SingleTuple>> splitPeriods(List<SingleTuple> input, int[] splitHours) {
+        int[] spMin = new int[splitHours.length];
+        return splitPeriods(input, splitHours, spMin);
     }
 
     /**
@@ -88,10 +93,33 @@ public class Util {
 
         List<SingleTuple> tuples = new ArrayList<>();
         for (String sign : strArr) {
-            tuples.add(SingleTuple.generateTuple(sign));
+            SingleTuple tuple = SingleTuple.generateTuple(sign);
+            if (tuple != null){
+                tuples.add(tuple);
+            }
         }
 
         tuples = Util.sortTuples(tuples);
         return tuples;
+    }
+
+    public static List<SingleTuple> getCommonList(String path) {
+
+        List<Path> paths = null;
+        //File list creation
+        try (Stream<Path> pstr = Files.walk(Paths.get(path))) {
+            paths = pstr.filter(Files::isRegularFile)
+                    .collect(Collectors.toList());
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+
+        //System.out.println(paths);
+
+        List<SingleTuple> outList = new ArrayList<>();
+        assert paths != null;
+        paths.forEach(p -> outList.addAll(getTuplesList(p.toString())));
+
+        return outList;
     }
 }

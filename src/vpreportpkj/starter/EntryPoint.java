@@ -1,6 +1,5 @@
 package vpreportpkj.starter;
 
-import vpreportpkj.core.ReportReader;
 import vpreportpkj.core.SingleTuple;
 import vpreportpkj.core.Util;
 
@@ -12,24 +11,27 @@ import java.util.Date;
 import java.util.List;
 
 public class EntryPoint {
+    //характеристики, влияющие на оценочные показатели в отчете
     static int singleRBTime = 50;
     static int gapLimit = 400;
     static int processingLimit = 600;
+    static int shiftDuration = 720;
 
     public static void main(String[] args) {
-        //String path = "C:\\IntellijProj\\VPReport\\src\\20_09_2022.txt";
-        String path2 = "C:\\VPReportsTest\\26_09_2022.txt";
+        //String path2 = "C:\\IntellijProj\\VPReport\\src\\20_09_2022.txt";
+        String path = "C:\\VPReportsTest\\29_09_2022_morn.txt";
 
-        List<SingleTuple> tuples = Util.getTuplesList(path2);
-        List<List<SingleTuple>> periods = Util.splitPeriods(tuples, new int[]{8, 20}, new int[]{0, 0});
-        for (List<SingleTuple> workShift : periods) {
-            System.out.println(workShift.size());
-        }
-        List<String> rep = getReport(tuples, true, true);
+        /*
+        List<SingleTuple> tuples = Util.getTuplesList(path);
+        List<List<SingleTuple>> periods = Util.splitPeriods(tuples, new int[]{8, 20});
 
-        System.out.println(rep.get(0));
-        System.out.println(rep.get(1));
-        System.out.println(rep.get(2));
+        List<String> rep = getReportForList(periods, true, true);
+        rep.forEach(System.out::println);
+         */
+
+        List<SingleTuple> commonList = Util.getCommonList("C:\\VPReportsTest");
+        List<String> rep2 = getReport(commonList, true, true);
+        rep2.forEach(System.out::println);
 
     }
 
@@ -57,7 +59,9 @@ public class EntryPoint {
         }
 
         StringBuilder sb = new StringBuilder("Report generated at: " + new Date() + '\n');
-        sb.append("Source: ").append("placeholder").append('\n');
+
+        sb.append("Source: work period between ").append(tuples.get(0).getStartTime()).append(" and ")
+                .append(tuples.get(tuples.size() - 1).getCompleteTime()).append('\n');
 
         long idleTime = 0;
         int carriageRollbacks = 0;
@@ -94,12 +98,13 @@ public class EntryPoint {
         long dealTime = operationTime + (long) carriageRollbacks * singleRBTime;
 
         sb.append("Total uptime, min: ").append(uptime / 60).append('\n')
-          .append("Total idle, min: ").append(idleTime / 60).append('\n')
-          .append("Operation time, min: ").append(operationTime / 60).append('\n')
-          .append("Carriage rollbacks (estimated): ").append(carriageRollbacks).append('\n')
-          .append("Deal time, min: ").append(dealTime / 60).append('\n')
-          .append("Workload, %, by opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
-          .append("Workload, %, by deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n');
+                .append("Total idle, min: ").append(idleTime / 60).append('\n')
+                .append("Operation time, min: ").append(operationTime / 60).append('\n')
+                .append("Carriage rollbacks (estimated): ").append(carriageRollbacks).append('\n')
+                .append("Deal time, min: ").append(dealTime / 60).append('\n')
+                .append("Workload, %, by opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
+                .append("Workload, %, by deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n')
+                .append("Workload, %, by shift duration & deal time: ").append(((double) dealTime / (double) (shiftDuration * 60)) * 100).append('\n');
 
         sb.append("____________________________________________________________________________\n");
         //подсчет общих данных
@@ -124,6 +129,15 @@ public class EntryPoint {
         }
 
         return report;
+    }
+
+    public static List<String> getReportForList(List<List<SingleTuple>> shifts, boolean exData1, boolean exData2) {
+        List<String> out = new ArrayList<>();
+        for (List<SingleTuple> period : shifts) {
+            List<String> report = getReport(period, exData1, exData2);
+            out.addAll(report);
+        }
+        return out;
     }
 
     public static String getOverLabours(List<SingleTuple> inputList) {

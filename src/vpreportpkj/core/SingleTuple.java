@@ -18,11 +18,16 @@ public class SingleTuple {
     int holeCount;
     double mass;
 
-    public static SingleTuple generateTuple(String line){
+    public static SingleTuple generateTuple(String line) {
         SingleTuple st = new SingleTuple();
         List<String> splitData = Arrays.stream(line.split(";"))
                 .map(String::trim)
                 .collect(Collectors.toList());
+
+        if (splitData.size() < 16) {
+            System.out.println("Wrong line format (generation tuple error)");
+            return null;
+        }
 
         List<String> date = Arrays.stream(splitData.get(0).split("/")).collect(Collectors.toList());
         List<String> time = Arrays.stream(splitData.get(6).split(":")).collect(Collectors.toList());
@@ -30,11 +35,17 @@ public class SingleTuple {
         st.completeTime = getDate(date, time);
         st.order = splitData.get(1);
         st.mark = splitData.get(3);
-        st.holeCount = Integer.parseInt(splitData.get(15));
+        int duration;
+        try {
+            st.holeCount = Integer.parseInt(splitData.get(15));
+            st.mass = Double.parseDouble(splitData.get(9));
+            st.length = Double.parseDouble(splitData.get(5));
+            duration = Integer.parseInt(splitData.get(7));
+        } catch (NumberFormatException nfe) {
+            System.out.println("Wrong line format: number format exception");
+            return null;
+        }
         st.position = splitData.get(2);
-        st.mass = Double.parseDouble(splitData.get(9));
-        st.length = Double.parseDouble(splitData.get(5));
-        int duration = Integer.parseInt(splitData.get(7));
         st.roll = splitData.get(4);
         st.startTime = new Date(st.completeTime.getTime() - duration * 1000L);
         st.duration = duration;
