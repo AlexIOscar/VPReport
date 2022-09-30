@@ -17,6 +17,7 @@ public class SingleTuple {
     int duration;
     int holeCount;
     double mass;
+    int cuts;
 
     public static SingleTuple generateTuple(String line) {
         SingleTuple st = new SingleTuple();
@@ -24,7 +25,7 @@ public class SingleTuple {
                 .map(String::trim)
                 .collect(Collectors.toList());
 
-        if (splitData.size() < 16) {
+        if (splitData.size() < 18) {
             System.out.println("Wrong line format (generation tuple error)");
             return null;
         }
@@ -40,6 +41,7 @@ public class SingleTuple {
             st.holeCount = Integer.parseInt(splitData.get(15));
             st.mass = Double.parseDouble(splitData.get(9));
             st.length = Double.parseDouble(splitData.get(5));
+            st.cuts = Integer.parseInt(splitData.get(17));
             duration = Integer.parseInt(splitData.get(7));
         } catch (NumberFormatException nfe) {
             System.out.println("Wrong line format: number format exception");
@@ -116,5 +118,9 @@ public class SingleTuple {
 
     public int getHoleCount() {
         return holeCount;
+    }
+
+    public int getCuts() {
+        return cuts;
     }
 }

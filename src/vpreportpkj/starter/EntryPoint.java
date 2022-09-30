@@ -16,6 +16,8 @@ public class EntryPoint {
     static int gapLimit = 400;
     static int processingLimit = 600;
     static int shiftDuration = 720;
+    static double whipLength = 12000;
+    static double kim = 0.85;
 
     public static void main(String[] args) {
         //String path2 = "C:\\IntellijProj\\VPReport\\src\\20_09_2022.txt";
@@ -30,7 +32,7 @@ public class EntryPoint {
          */
 
         List<SingleTuple> commonList = Util.getCommonList("C:\\VPReportsTest");
-        List<String> rep2 = getReport(commonList, true, true);
+        List<String> rep2 = getReport(commonList, false, false);
         rep2.forEach(System.out::println);
 
     }
@@ -97,25 +99,35 @@ public class EntryPoint {
         long operationTime = uptime - idleTime;
         long dealTime = operationTime + (long) carriageRollbacks * singleRBTime;
 
-        sb.append("Total uptime, min: ").append(uptime / 60).append('\n')
-                .append("Total idle, min: ").append(idleTime / 60).append('\n')
-                .append("Operation time, min: ").append(operationTime / 60).append('\n')
-                .append("Carriage rollbacks (estimated): ").append(carriageRollbacks).append('\n')
-                .append("Deal time, min: ").append(dealTime / 60).append('\n')
-                .append("Workload, %, by opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
-                .append("Workload, %, by deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n')
-                .append("Workload, %, by shift duration & deal time: ").append(((double) dealTime / (double) (shiftDuration * 60)) * 100).append('\n');
-
-        sb.append("____________________________________________________________________________\n");
         //подсчет общих данных
         int holes = 0;
         double mass = 0;
+        double length = 0;
+        int cuts = 0;
         for (SingleTuple tuple : tuples) {
             holes = holes + tuple.getHoleCount();
             mass = mass + tuple.getMass();
+            length = length + tuple.getLength();
+            cuts = cuts + tuple.getCuts();
         }
+
+        sb.append("Total uptime, min: ").append(uptime / 60).append('\n')
+                .append("Total idle, min: ").append(idleTime / 60).append('\n')
+                .append("Operation time, min: ").append(operationTime / 60).append('\n')
+                .append("Carriage rollbacks (estimated by time gaps): ").append(carriageRollbacks).append('\n')
+                .append("Carriage rollbacks (estimated by total length): ").append((int) (length / whipLength / kim)).append('\n')
+                .append("Carriage rollbacks (estimated by extra cuts): ").append(cuts - tuples.size()).append('\n')
+                .append("Deal time, min: ").append(dealTime / 60).append('\n')
+                .append("Workload, %, by period duration & opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
+                .append("Workload, %, by period duration & deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n')
+                .append("Workload, %, by shift duration & deal time: ").append(((double) dealTime / (double) (shiftDuration * 60)) * 100).append('\n');
+
+        //вывод общих данных
+        sb.append("____________________________________________________________________________\n");
         sb.append("Total holes: ").append(holes).append('\n');
+        sb.append("Total cuts: ").append(cuts).append('\n');
         sb.append("Total mass, kg: ").append(mass).append('\n');
+        sb.append("Total length, mm: ").append(length).append('\n');
         sb.append("Total pieces: ").append(tuples.size()).append('\n');
 
         report.add(sb.toString());

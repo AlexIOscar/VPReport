@@ -114,8 +114,6 @@ public class Util {
             ioException.printStackTrace();
         }
 
-        //System.out.println(paths);
-
         List<SingleTuple> outList = new ArrayList<>();
         assert paths != null;
         paths.forEach(p -> outList.addAll(getTuplesList(p.toString())));
