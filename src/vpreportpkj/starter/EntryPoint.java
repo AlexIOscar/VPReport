@@ -31,10 +31,16 @@ public class EntryPoint {
         rep.forEach(System.out::println);
          */
 
+        //склеиваем все отчеты в папке в единый пул
         List<SingleTuple> commonList = Util.getCommonList("C:\\VPReportsTest");
+        //общий отчет
         List<String> rep2 = getReport(commonList, false, false);
+        List<List<SingleTuple>> periods = Util.splitPeriods(commonList, new int[]{8, 20}, new int[]{0, 0});
+        //посменный отчет
+        List<String> rep3 = getReportForList(periods, false, false);
         rep2.forEach(System.out::println);
-
+        System.out.println("\n\n____________Посменно:_____________");
+        rep3.forEach(System.out::println);
     }
 
     public static void pushToFile(String rawFilePath, List<SingleTuple> tuples) {
@@ -123,7 +129,7 @@ public class EntryPoint {
                 .append("Workload, %, by shift duration & deal time: ").append(((double) dealTime / (double) (shiftDuration * 60)) * 100).append('\n');
 
         //вывод общих данных
-        sb.append("____________________________________________________________________________\n");
+        sb.append("____________________________Total amounts____________________________\n");
         sb.append("Total holes: ").append(holes).append('\n');
         sb.append("Total cuts: ").append(cuts).append('\n');
         sb.append("Total mass, kg: ").append(mass).append('\n');

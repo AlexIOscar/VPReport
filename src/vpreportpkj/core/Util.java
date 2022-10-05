@@ -16,32 +16,7 @@ public class Util {
         Date first = input.get(0).startTime;
         Date last = input.get(input.size() - 1).completeTime;
 
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(first);
-        int stYear = cal.get(Calendar.YEAR);
-        int stMonth = cal.get(Calendar.MONTH);
-        int stDay = cal.get(Calendar.DAY_OF_MONTH);
-        cal.setTime(last);
-        int enYear = cal.get(Calendar.YEAR);
-        int enMonth = cal.get(Calendar.MONTH);
-        int enDay = cal.get(Calendar.DAY_OF_MONTH);
-
-        List<Date> splitPoints = new ArrayList<>();
-
-        for (int y = stYear; y <= enYear; y++) {
-            for (int mon = stMonth; mon <= enMonth; mon++) {
-                for (int d = stDay; d <= enDay; d++) {
-                    for (int pointer = 0;
-                         pointer <= splitHours.length - 1 && pointer <= splitMinutes.length - 1; pointer++) {
-                        cal.set(y, mon, d, splitHours[pointer], splitMinutes[pointer], 0);
-                        splitPoints.add(cal.getTime());
-                    }
-                }
-            }
-        }
-        //far-far future comes...
-        splitPoints.add(new Date(Long.MAX_VALUE));
-
+        List<Date> splitPoints = getSplitMap(splitHours, splitMinutes, first, last);
         List<List<SingleTuple>> output = new ArrayList<>();
 
         int pointer = 0;
@@ -66,6 +41,43 @@ public class Util {
         output = output.stream().filter(s -> !s.isEmpty()).collect(Collectors.toList());
 
         return output;
+    }
+
+    private static List<Date> getSplitMap(int[] splitHours, int[] splitMinutes, Date first, Date last) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(first);
+        int stYear = cal.get(Calendar.YEAR);
+        int stMonth = cal.get(Calendar.MONTH);
+        int stDay = cal.get(Calendar.DAY_OF_MONTH);
+        cal.setTime(last);
+        int enYear = cal.get(Calendar.YEAR);
+        int enMonth = cal.get(Calendar.MONTH);
+        int enDay = cal.get(Calendar.DAY_OF_MONTH);
+
+        List<Date> splitPoints = new ArrayList<>();
+
+        Calendar stepper = Calendar.getInstance();
+        //get end-of-cicle-date
+        stepper.set(enYear, enMonth, enDay + 1);
+        Date stopTime = stepper.getTime();
+        stepper.set(stYear, stMonth, stDay);
+        for (int y = stYear; y <= enYear; y++) {
+            do {
+                int mon = stepper.get(Calendar.MONTH);
+                int d = stepper.get(Calendar.DAY_OF_MONTH);
+                for (int pointer = 0; pointer <= splitHours.length - 1 && pointer <= splitMinutes.length - 1; pointer++) {
+                    cal.set(y, mon, d, splitHours[pointer], splitMinutes[pointer], 0);
+                    splitPoints.add(cal.getTime());
+                }
+                //86400000 millis in day
+                long time = stepper.getTime().getTime() + 86_400_000;
+                //step to next day midnight
+                stepper.setTime(new Date(time));
+            } while (stepper.getTime().before(stopTime));
+        }
+        //far-far future comes...
+        splitPoints.add(new Date(Long.MAX_VALUE));
+        return splitPoints;
     }
 
     public static List<List<SingleTuple>> splitPeriods(List<SingleTuple> input, int[] splitHours) {
@@ -94,7 +106,7 @@ public class Util {
         List<SingleTuple> tuples = new ArrayList<>();
         for (String sign : strArr) {
             SingleTuple tuple = SingleTuple.generateTuple(sign);
-            if (tuple != null){
+            if (tuple != null) {
                 tuples.add(tuple);
             }
         }
