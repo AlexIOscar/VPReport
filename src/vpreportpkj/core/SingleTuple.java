@@ -27,7 +27,7 @@ public class SingleTuple {
 
         if (splitData.size() < 18) {
             System.out.println("Wrong line format (generation tuple error)");
-            return null;
+            throw new NumberFormatException();
         }
 
         List<String> date = Arrays.stream(splitData.get(0).split("/")).collect(Collectors.toList());
