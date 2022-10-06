@@ -87,7 +87,7 @@ public class MainForm extends JFrame {
         cdButton.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int dialogResult = fc.showOpenDialog(null);
+            int dialogResult = fc.showDialog(null, "Choose");
             if (dialogResult == JFileChooser.APPROVE_OPTION) {
                 File selected = fc.getSelectedFile();
                 chooseText.setText(selected.getAbsolutePath());
@@ -99,7 +99,7 @@ public class MainForm extends JFrame {
         setOutDirButton.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int dialogResult = fc.showSaveDialog(null);
+            int dialogResult = fc.showDialog(null, "OK");
             if (dialogResult == JFileChooser.APPROVE_OPTION) {
                 File selected = fc.getSelectedFile();
                 outputDitText.setText(selected.getAbsolutePath());
