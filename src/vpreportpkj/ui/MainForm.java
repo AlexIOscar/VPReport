@@ -39,6 +39,7 @@ public class MainForm extends JFrame {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setSize(700, 300);
         setLocation(100, 100);
+        setTitle("VP reports processor");
         initChooseButton();
         initOutButton();
         initDealButton();
