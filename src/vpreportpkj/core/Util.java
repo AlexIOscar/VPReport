@@ -11,13 +11,15 @@ import java.util.stream.Stream;
 public class Util {
     public static List<List<SingleTuple>> splitPeriods(List<SingleTuple> input, int[] splitHours,
                                                        int[] splitMinutes) {
-
+        List<List<SingleTuple>> output = new ArrayList<>();
+        if (input.size() == 0) {
+            return output;
+        }
         input = sortTuples(input);
         Date first = input.get(0).startTime;
         Date last = input.get(input.size() - 1).completeTime;
 
         List<Date> splitPoints = getSplitMap(splitHours, splitMinutes, first, last);
-        List<List<SingleTuple>> output = new ArrayList<>();
 
         int pointer = 0;
         List<SingleTuple> buffer = new ArrayList<>();

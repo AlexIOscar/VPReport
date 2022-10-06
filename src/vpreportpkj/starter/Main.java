@@ -1,8 +1,10 @@
 package vpreportpkj.starter;
 import vpreportpkj.ui.MainForm;
 
+import java.io.IOException;
+
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         MainForm mf = new MainForm();
 

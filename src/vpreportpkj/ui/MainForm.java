@@ -6,31 +6,78 @@ import vpreportpkj.starter.ReportProcessor;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.ResourceBundle;
 
 import static vpreportpkj.starter.ReportProcessor.getReport;
 
 public class MainForm extends JFrame {
     private JPanel panel1;
     private JTextField chooseText;
+    private JTextField outputDitText;
     private JTextField reportName;
     private JButton dealButton;
     private JButton cdButton;
-    private JTextField outputDitText;
     private JButton setOutDirButton;
+    private final Properties prop = new Properties();
+    private String propPath;
 
-    public MainForm() throws HeadlessException {
+    public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
         setVisible(true);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setSize(700, 300);
         setLocation(100, 100);
         initChooseButton();
         initOutButton();
         initDealButton();
+        initProperties();
+        initWindowListeners();
 
+        chooseText.setText(prop.getProperty("chooseText"));
+        outputDitText.setText(prop.getProperty("outputDitText"));
+        reportName.setText(prop.getProperty("reportName"));
+    }
 
+    private void initProperties() throws IOException {
+        try {
+            URI uri = Thread.currentThread().getContextClassLoader().getResource("").toURI();
+            propPath = Paths.get(uri) + "\\";
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        propPath = URLDecoder.decode(propPath, "UTF-8");
+        propPath = propPath + "app.properties";
+
+        prop.load(Files.newInputStream(Paths.get(propPath)));
+    }
+
+    private void initWindowListeners(){
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                prop.setProperty("chooseText", chooseText.getText());
+                prop.setProperty("outputDitText", outputDitText.getText());
+                prop.setProperty("reportName", reportName.getText());
+                try {
+                    prop.store(new FileWriter(propPath), "store to properties file");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                System.exit(0);
+            }
+        });
     }
 
     public void initChooseButton() {
