@@ -45,7 +45,8 @@ public class SingleTuple {
             duration = Integer.parseInt(splitData.get(7));
         } catch (NumberFormatException nfe) {
             System.out.println("Wrong line format: number format exception");
-            return null;
+            throw nfe;
+            //return null;
         }
         st.position = splitData.get(2);
         st.roll = splitData.get(4);

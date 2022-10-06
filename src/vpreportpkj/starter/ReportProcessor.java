@@ -1,8 +1,8 @@
 package vpreportpkj.starter;
 
 import vpreportpkj.core.SingleTuple;
-import vpreportpkj.core.Util;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class EntryPoint {
+public class ReportProcessor {
     //характеристики, влияющие на оценочные показатели в отчете
     static int singleRBTime = 50;
     static int gapLimit = 400;
@@ -19,40 +19,34 @@ public class EntryPoint {
     static double whipLength = 12000;
     static double kim = 0.85;
 
-    public static void main(String[] args) {
-        //String path2 = "C:\\IntellijProj\\VPReport\\src\\20_09_2022.txt";
-        String path = "C:\\VPReportsTest\\29_09_2022_morn.txt";
-
-        /*
-        List<SingleTuple> tuples = Util.getTuplesList(path);
-        List<List<SingleTuple>> periods = Util.splitPeriods(tuples, new int[]{8, 20});
-
-        List<String> rep = getReportForList(periods, true, true);
-        rep.forEach(System.out::println);
-         */
-
-        //склеиваем все отчеты в папке в единый пул
-        List<SingleTuple> commonList = Util.getCommonList("C:\\VPReportsTest");
-        //общий отчет
-        List<String> rep2 = getReport(commonList, false, false);
-        List<List<SingleTuple>> periods = Util.splitPeriods(commonList, new int[]{8, 20}, new int[]{0, 0});
-        //посменный отчет
-        List<String> rep3 = getReportForList(periods, false, false);
-        rep2.forEach(System.out::println);
-        System.out.println("\n\n____________Посменно:_____________");
-        rep3.forEach(System.out::println);
-    }
-
-    public static void pushToFile(String rawFilePath, List<SingleTuple> tuples) {
+    public static void pushToFile(String outPath, List<SingleTuple> tuples) {
         List<String> rep = getReport(tuples, true, true);
-        File outF = new File(rawFilePath.replaceAll(".txt", "") + "_report.txt");
+        //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
+        File outF = new File(outPath);
 
         try (FileWriter writer = new FileWriter(outF, false)) {
-            writer.write(rep.get(0));
-            writer.write(rep.get(1));
-            writer.write(rep.get(2));
+            for (String str : rep) {
+                writer.write(str);
+            }
             writer.flush();
         } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    public static void pushToFileForList(String outPath, List<List<SingleTuple>> tuplesList){
+        List<String> rep = getReportForList(tuplesList, false, false);
+        //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
+        File outF = new File(outPath);
+
+        try (FileWriter writer = new FileWriter(outF, false)) {
+            for (String str : rep) {
+                writer.write(str);
+            }
+            writer.flush();
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
             System.out.println(ex.getMessage());
         }
     }
@@ -133,8 +127,8 @@ public class EntryPoint {
         sb.append("Total holes: ").append(holes).append('\n');
         sb.append("Total cuts: ").append(cuts).append('\n');
         sb.append("Total mass, kg: ").append(mass).append('\n');
-        sb.append("Total length, mm: ").append(length).append('\n');
-        sb.append("Total pieces: ").append(tuples.size()).append('\n');
+        sb.append("Total length, m: ").append(length / 1000).append('\n');
+        sb.append("Total pieces: ").append(tuples.size()).append("\n\n");
 
         report.add(sb.toString());
 
@@ -159,7 +153,7 @@ public class EntryPoint {
     }
 
     public static String getOverLabours(List<SingleTuple> inputList) {
-        StringBuilder sb = new StringBuilder("Suspicious labours (more than " + processingLimit + " seconds):\n");
+        StringBuilder sb = new StringBuilder("\nSuspicious labours (more than " + processingLimit + " seconds):\n");
         inputList.stream().filter(l -> l.getDuration() > processingLimit).forEach(l -> sb.append(l.getDuration())
                 .append(" processing duration detected for ")
                 .append(l.getOrder())
