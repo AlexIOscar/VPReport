@@ -12,6 +12,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -59,7 +60,8 @@ public class MainForm extends JFrame {
         propPath = URLDecoder.decode(propPath, "UTF-8");
         propPath = propPath + "app.properties";
 
-        prop.load(Files.newInputStream(Paths.get(propPath)));
+        //prop.load(Files.newInputStream(Paths.get(propPath)));
+        prop.load(new InputStreamReader(Files.newInputStream(new File(propPath).toPath()), StandardCharsets.UTF_8));
     }
 
     private void initWindowListeners(){
@@ -70,7 +72,8 @@ public class MainForm extends JFrame {
                 prop.setProperty("outputDitText", outputDitText.getText());
                 prop.setProperty("reportName", reportName.getText());
                 try {
-                    prop.store(new FileWriter(propPath), "store to properties file");
+                    //prop.store(new FileWriter(propPath), "store to properties file");
+                    prop.store(new OutputStreamWriter(Files.newOutputStream(new File(propPath).toPath()), StandardCharsets.UTF_8), "storing props");
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
