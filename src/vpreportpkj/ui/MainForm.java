@@ -37,7 +37,11 @@ public class MainForm extends JFrame {
         setContentPane(panel1);
         setVisible(true);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        setSize(700, 300);
+
+        ImageIcon ii = new ImageIcon(MainForm.class.getResource("link.png"));
+        setIconImage(ii.getImage());
+
+        setSize(780, 260);
         setLocation(100, 100);
         setTitle("VP reports processor");
         initChooseButton();
@@ -49,6 +53,7 @@ public class MainForm extends JFrame {
         chooseText.setText(prop.getProperty("chooseText"));
         outputDitText.setText(prop.getProperty("outputDitText"));
         reportName.setText(prop.getProperty("reportName"));
+        this.setSize(Integer.parseInt(prop.getProperty("formWidth")), Integer.parseInt(prop.getProperty("formHeight")));
     }
 
     private void initProperties() throws IOException {
@@ -58,10 +63,9 @@ public class MainForm extends JFrame {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        propPath = URLDecoder.decode(propPath, "UTF-8");
+        propPath = URLDecoder.decode(propPath, StandardCharsets.UTF_8);
         propPath = propPath + "app.properties";
 
-        //prop.load(Files.newInputStream(Paths.get(propPath)));
         prop.load(new InputStreamReader(Files.newInputStream(new File(propPath).toPath()), StandardCharsets.UTF_8));
     }
 
@@ -72,8 +76,9 @@ public class MainForm extends JFrame {
                 prop.setProperty("chooseText", chooseText.getText());
                 prop.setProperty("outputDitText", outputDitText.getText());
                 prop.setProperty("reportName", reportName.getText());
+                prop.setProperty("formWidth", String.valueOf(getWidth()));
+                prop.setProperty("formHeight", String.valueOf(getHeight()));
                 try {
-                    //prop.store(new FileWriter(propPath), "store to properties file");
                     prop.store(new OutputStreamWriter(Files.newOutputStream(new File(propPath).toPath()), StandardCharsets.UTF_8), "storing props");
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);

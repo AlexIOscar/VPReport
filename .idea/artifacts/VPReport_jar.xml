@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="VPReport:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/VPReport_jar</output-path>
+    <root id="archive" name="VPReport.jar">
+      <element id="module-output" name="VPReport" />
+    </root>
+  </artifact>
+</component>

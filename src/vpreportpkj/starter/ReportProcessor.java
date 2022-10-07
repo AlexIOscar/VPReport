@@ -128,7 +128,9 @@ public class ReportProcessor {
         sb.append("Total cuts: ").append(cuts).append('\n');
         sb.append("Total mass, kg: ").append(mass).append('\n');
         sb.append("Total length, m: ").append(length / 1000).append('\n');
-        sb.append("Total pieces: ").append(tuples.size()).append("\n\n");
+        sb.append("Total pieces: ").append(tuples.size()).append("\n");
+        sb.append(
+                "-----------------------------------------------------------------------------------------------------------------------\n\n");
 
         report.add(sb.toString());
 
