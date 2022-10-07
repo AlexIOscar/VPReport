@@ -35,7 +35,7 @@ public class ReportProcessor {
         }
     }
 
-    public static void pushToFileForList(String outPath, List<List<SingleTuple>> tuplesList){
+    public static void pushToFileForList(String outPath, List<List<SingleTuple>> tuplesList) {
         List<String> rep = getReportForList(tuplesList, false, false);
         //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
         File outF = new File(outPath);
@@ -52,6 +52,9 @@ public class ReportProcessor {
     }
 
     public static List<String> getReport(List<SingleTuple> tuples, boolean exData1, boolean exData2) {
+        if (tuples.size() == 0) {
+            throw new RuntimeException("Processing set is empty");
+        }
 
         List<String> report = new ArrayList<>();
 

@@ -11,6 +11,7 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.Properties;
 
@@ -55,7 +56,6 @@ public class MainForm extends JFrame {
     private void initProperties() throws IOException {
         String addr = System.getProperty("user.home") + "\\VPRP\\";
         propFile = new File(addr + "app.properties");
-        File r = new File("C:\\Users\\Tolstokulakov_AV\\some");
         if (!propFile.exists()) {
             new File(addr).mkdir();
             propFile.createNewFile();
@@ -110,25 +110,38 @@ public class MainForm extends JFrame {
 
     public void initDealButton() {
         dealButton.addActionListener(e -> {
-            String path = chooseText.getText();
+            String path1 = chooseText.getText();
+            String path2 = outputDitText.getText();
             List<SingleTuple> wholeList = null;
-            if (!path.equals("")) {
-                try {
-                    wholeList = Util.getCommonList(chooseText.getText());
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "Wrong line format (generation tuple error)");
-                }
-            } else {
+            if (path1.equals("")) {
                 JOptionPane.showMessageDialog(null, "Input directory is empty");
                 return;
             }
+
+            if (path2.equals("")) {
+                JOptionPane.showMessageDialog(null, "Output directory is empty");
+                return;
+            }
+
+            try {
+                wholeList = Util.getCommonList(chooseText.getText());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Wrong line format (generation tuple error)");
+            } catch (Exception e2) {
+                JOptionPane.showMessageDialog(null, e2.getMessage());
+            }
+
             if (wholeList != null) {
                 List<List<SingleTuple>> periods = Util.splitPeriods(wholeList, new int[]{8, 20});
 
-                ReportProcessor.pushToFile((outputDitText.getText() + "\\" + reportName.getText() + "_common.txt"),
-                        wholeList);
-                ReportProcessor.pushToFileForList((outputDitText.getText() + "\\" + reportName.getText() + "_shifts.txt"),
-                        periods);
+                try {
+                    ReportProcessor.pushToFile((outputDitText.getText() + "\\" + reportName.getText() + "_common.txt"),
+                            wholeList);
+                    ReportProcessor.pushToFileForList((outputDitText.getText() + "\\" + reportName.getText() + "_shifts.txt"),
+                            periods);
+                } catch (Exception nsfe) {
+                    JOptionPane.showMessageDialog(null, nsfe.getMessage());
+                }
             }
         });
     }
