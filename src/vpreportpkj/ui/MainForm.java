@@ -16,11 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
-import java.util.ResourceBundle;
-
-import static vpreportpkj.starter.ReportProcessor.getReport;
 
 public class MainForm extends JFrame {
     private JPanel panel1;
@@ -31,7 +27,7 @@ public class MainForm extends JFrame {
     private JButton cdButton;
     private JButton setOutDirButton;
     private final Properties prop = new Properties();
-    private String propPath;
+    private File propFile;
 
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
@@ -47,29 +43,30 @@ public class MainForm extends JFrame {
         initChooseButton();
         initOutButton();
         initDealButton();
-        initProperties();
         initWindowListeners();
+        initProperties();
 
         chooseText.setText(prop.getProperty("chooseText"));
         outputDitText.setText(prop.getProperty("outputDitText"));
-        reportName.setText(prop.getProperty("reportName"));
-        this.setSize(Integer.parseInt(prop.getProperty("formWidth")), Integer.parseInt(prop.getProperty("formHeight")));
+        reportName.setText(prop.getProperty("reportName", "Report"));
+
+        this.setSize(Integer.parseInt(prop.getProperty("formWidth", "780")),
+                Integer.parseInt(prop.getProperty("formHeight", "260")));
     }
 
     private void initProperties() throws IOException {
-        try {
-            URI uri = Thread.currentThread().getContextClassLoader().getResource("").toURI();
-            propPath = Paths.get(uri) + "\\";
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+        String addr = System.getProperty("user.home");
+        addr = URLDecoder.decode(addr, StandardCharsets.UTF_8) + "\\VPRP\\";
+        propFile = new File(addr + "app.properties");
+        File r = new File("C:\\Users\\Tolstokulakov_AV\\some");
+        if (!propFile.exists()) {
+            new File(addr).mkdir();
+            propFile.createNewFile();
         }
-        propPath = URLDecoder.decode(propPath, StandardCharsets.UTF_8);
-        propPath = propPath + "app.properties";
-
-        prop.load(new InputStreamReader(Files.newInputStream(new File(propPath).toPath()), StandardCharsets.UTF_8));
+        prop.load(new InputStreamReader(Files.newInputStream(propFile.toPath()), StandardCharsets.UTF_8));
     }
 
-    private void initWindowListeners(){
+    private void initWindowListeners() {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -79,11 +76,12 @@ public class MainForm extends JFrame {
                 prop.setProperty("formWidth", String.valueOf(getWidth()));
                 prop.setProperty("formHeight", String.valueOf(getHeight()));
                 try {
-                    prop.store(new OutputStreamWriter(Files.newOutputStream(new File(propPath).toPath()), StandardCharsets.UTF_8), "storing props");
-                } catch (IOException ex) {
+                    prop.store(new OutputStreamWriter(Files.newOutputStream(propFile.toPath()), StandardCharsets.UTF_8),
+                            "storing props");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Ошибка взаимодействия с файлом конфигурации");
                     throw new RuntimeException(ex);
                 }
-
                 System.exit(0);
             }
         });
