@@ -9,14 +9,12 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
+
+import static java.net.URLDecoder.decode;
 
 public class MainForm extends JFrame {
     private JPanel panel1;
@@ -55,8 +53,7 @@ public class MainForm extends JFrame {
     }
 
     private void initProperties() throws IOException {
-        String addr = System.getProperty("user.home");
-        addr = URLDecoder.decode(addr, StandardCharsets.UTF_8) + "\\VPRP\\";
+        String addr = System.getProperty("user.home") + "\\VPRP\\";
         propFile = new File(addr + "app.properties");
         File r = new File("C:\\Users\\Tolstokulakov_AV\\some");
         if (!propFile.exists()) {

@@ -108,9 +108,7 @@ public class Util {
         List<SingleTuple> tuples = new ArrayList<>();
         for (String sign : strArr) {
             SingleTuple tuple = SingleTuple.generateTuple(sign);
-            if (tuple != null) {
-                tuples.add(tuple);
-            }
+            tuples.add(tuple);
         }
 
         tuples = Util.sortTuples(tuples);
@@ -123,6 +121,7 @@ public class Util {
         //File list creation
         try (Stream<Path> pstr = Files.walk(Paths.get(path))) {
             paths = pstr.filter(Files::isRegularFile)
+                    .filter(f -> f.toString().contains(".txt"))
                     .collect(Collectors.toList());
         } catch (IOException ioException) {
             ioException.printStackTrace();
@@ -131,7 +130,6 @@ public class Util {
         List<SingleTuple> outList = new ArrayList<>();
         assert paths != null;
         paths.forEach(p -> outList.addAll(getTuplesList(p.toString())));
-
         return outList;
     }
 }
