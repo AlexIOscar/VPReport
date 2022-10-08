@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ReportProcessor {
     //характеристики, влияющие на оценочные показатели в отчете
@@ -18,6 +19,8 @@ public class ReportProcessor {
     static int shiftDuration = 720;
     static double whipLength = 12000;
     static double kim = 0.85;
+    static boolean isDecrSuspPT = false;
+    static int decrSuspTTo = 50;
 
     public static void pushToFile(String outPath, List<SingleTuple> tuples) {
         List<String> rep = getReport(tuples, true, true);
@@ -85,12 +88,6 @@ public class ReportProcessor {
                 }
 
                 idleTime = idleTime + ((startNext.getTime() - completeThis.getTime()) / 1000);
-
-                /*
-                System.out.println("time gap " + ((startNext.getTime() - completeThis.getTime()) / 1000) + " in report " +
-                        "line " + (i + 1));
-                 */
-
             }
         }
         //printOverlayingInfo(tuples);
@@ -98,6 +95,15 @@ public class ReportProcessor {
         //"аналитический" отчет
         long uptime =
                 (tuples.get((tuples.size() - 1)).getCompleteTime().getTime() - tuples.get(0).getStartTime().getTime()) / 1000;
+
+
+        if (isDecrSuspPT) {
+            long deltaTime = 0L;
+            AtomicLong decreaseTime = new AtomicLong();
+            long suspTimes = tuples.stream().filter(t -> t.getDuration() > processingLimit).peek(t -> decreaseTime.addAndGet(t.getDuration())).count();
+            deltaTime = decreaseTime.get() - suspTimes * decrSuspTTo;
+            idleTime += deltaTime;
+        }
 
         long operationTime = uptime - idleTime;
         long dealTime = operationTime + (long) carriageRollbacks * singleRBTime;
@@ -219,5 +225,13 @@ public class ReportProcessor {
 
     public static void setKim(double kim) {
         ReportProcessor.kim = kim;
+    }
+
+    public static void setIsDecrSuspPT(boolean isDecrSuspPT) {
+        ReportProcessor.isDecrSuspPT = isDecrSuspPT;
+    }
+
+    public static void setDecrSuspTTo(int decrSuspTTo) {
+        ReportProcessor.decrSuspTTo = decrSuspTTo;
     }
 }

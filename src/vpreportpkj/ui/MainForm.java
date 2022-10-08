@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class MainForm extends JFrame {
+    String version = "v1.0";
     private JPanel panel1;
     private JTextField chooseText;
     private JTextField outputDitText;
@@ -22,11 +23,11 @@ public class MainForm extends JFrame {
     private JButton dealButton;
     private JButton cdButton;
     private JButton setOutDirButton;
-
     private final Properties prop = new Properties();
     private File propFile;
 
-    String version = "v1.0.0";
+    public int test;
+
 
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
@@ -44,7 +45,6 @@ public class MainForm extends JFrame {
         initDealButton();
         initWindowListeners();
         initProperties();
-
         applySettings();
 
         //this is the last for prevent flickering
@@ -66,7 +66,9 @@ public class MainForm extends JFrame {
             ReportProcessor.setShiftDuration(Integer.parseInt(prop.getProperty("shiftDur", "720")));
             ReportProcessor.setWhipLength(Integer.parseInt(prop.getProperty("whipLen", "12000")));
             ReportProcessor.setKim(Double.parseDouble(prop.getProperty("kim", "0.85")));
-        } catch (NumberFormatException nfe){
+            ReportProcessor.setIsDecrSuspPT(Boolean.parseBoolean(prop.getProperty("decrSPTbox", "false")));
+            ReportProcessor.setDecrSuspTTo(Integer.parseInt(prop.getProperty("decrSuspProcTo", "50")));
+        } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
         }
     }
@@ -100,8 +102,8 @@ public class MainForm extends JFrame {
         prop.load(new InputStreamReader(Files.newInputStream(propFile.toPath()), StandardCharsets.UTF_8));
     }
 
-    private String getAbout(){
-        return "Version: "+ version +"\nOEMZ IT Department, 2022\nDeveloped by Tolstokulakov A.V.\nInner phone: none";
+    private String getAbout() {
+        return "Version: " + version + "\nOEMZ IT Department, 2022\nDeveloped by Tolstokulakov A.V.\nLocal phone: none";
     }
 
     private void initWindowListeners() {
