@@ -196,4 +196,28 @@ public class ReportProcessor {
             System.out.println("No cases of triple overlaying were detected");
         }
     }
+
+    public static void setSingleRBTime(int singleRBTime) {
+        ReportProcessor.singleRBTime = singleRBTime;
+    }
+
+    public static void setGapLimit(int gapLimit) {
+        ReportProcessor.gapLimit = gapLimit;
+    }
+
+    public static void setProcessingLimit(int processingLimit) {
+        ReportProcessor.processingLimit = processingLimit;
+    }
+
+    public static void setShiftDuration(int shiftDuration) {
+        ReportProcessor.shiftDuration = shiftDuration;
+    }
+
+    public static void setWhipLength(double whipLength) {
+        ReportProcessor.whipLength = whipLength;
+    }
+
+    public static void setKim(double kim) {
+        ReportProcessor.kim = kim;
+    }
 }

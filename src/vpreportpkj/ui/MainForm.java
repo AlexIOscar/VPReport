@@ -11,11 +11,8 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.Properties;
-
-import static java.net.URLDecoder.decode;
 
 public class MainForm extends JFrame {
     private JPanel panel1;
@@ -25,12 +22,14 @@ public class MainForm extends JFrame {
     private JButton dealButton;
     private JButton cdButton;
     private JButton setOutDirButton;
+
     private final Properties prop = new Properties();
     private File propFile;
 
+    String version = "v1.0.0";
+
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
-        setVisible(true);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         ImageIcon ii = new ImageIcon(MainForm.class.getResource("link.png"));
@@ -38,19 +37,57 @@ public class MainForm extends JFrame {
 
         setSize(780, 260);
         setLocation(100, 100);
-        setTitle("VP reports processor");
+        createMenu();
+        setTitle("VP reports processor " + version);
         initChooseButton();
         initOutButton();
         initDealButton();
         initWindowListeners();
         initProperties();
 
+        applySettings();
+
+        //this is the last for prevent flickering
+        setVisible(true);
+    }
+
+    private void applySettings() {
         chooseText.setText(prop.getProperty("chooseText"));
         outputDitText.setText(prop.getProperty("outputDitText"));
         reportName.setText(prop.getProperty("reportName", "Report"));
 
         this.setSize(Integer.parseInt(prop.getProperty("formWidth", "780")),
                 Integer.parseInt(prop.getProperty("formHeight", "260")));
+
+        try {
+            ReportProcessor.setSingleRBTime(Integer.parseInt(prop.getProperty("carRB", "50")));
+            ReportProcessor.setGapLimit(Integer.parseInt(prop.getProperty("suspTG", "400")));
+            ReportProcessor.setProcessingLimit(Integer.parseInt(prop.getProperty("suspPT", "600")));
+            ReportProcessor.setShiftDuration(Integer.parseInt(prop.getProperty("shiftDur", "720")));
+            ReportProcessor.setWhipLength(Integer.parseInt(prop.getProperty("whipLen", "12000")));
+            ReportProcessor.setKim(Double.parseDouble(prop.getProperty("kim", "0.85")));
+        } catch (NumberFormatException nfe){
+            JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
+        }
+    }
+
+    private void createMenu() {
+        JMenuBar mbar = new JMenuBar();
+        this.setJMenuBar(mbar);
+        JMenu fileMenu = new JMenu("File");
+        JMenu aboutMenu = new JMenu("About");
+        mbar.add(fileMenu);
+        mbar.add(aboutMenu);
+        JMenuItem aboutItem = new JMenuItem("About");
+        JMenuItem settingsItem = new JMenuItem("Settings...");
+        JMenuItem exitItem = new JMenuItem("Exit");
+        fileMenu.add(settingsItem);
+        fileMenu.add(exitItem);
+        aboutMenu.add(aboutItem);
+
+        settingsItem.addActionListener(e -> new SettingsForm("Settings", this));
+        exitItem.addActionListener(e -> this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
+        aboutItem.addActionListener(e -> JOptionPane.showMessageDialog(this, getAbout(), "About program", JOptionPane.INFORMATION_MESSAGE));
     }
 
     private void initProperties() throws IOException {
@@ -61,6 +98,10 @@ public class MainForm extends JFrame {
             propFile.createNewFile();
         }
         prop.load(new InputStreamReader(Files.newInputStream(propFile.toPath()), StandardCharsets.UTF_8));
+    }
+
+    private String getAbout(){
+        return "Version: "+ version +"\nOEMZ IT Department, 2022\nDeveloped by Tolstokulakov A.V.\nInner phone: none";
     }
 
     private void initWindowListeners() {
@@ -88,7 +129,7 @@ public class MainForm extends JFrame {
         cdButton.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int dialogResult = fc.showDialog(null, "Choose");
+            int dialogResult = fc.showDialog(this, "Choose");
             if (dialogResult == JFileChooser.APPROVE_OPTION) {
                 File selected = fc.getSelectedFile();
                 chooseText.setText(selected.getAbsolutePath());
@@ -100,7 +141,7 @@ public class MainForm extends JFrame {
         setOutDirButton.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int dialogResult = fc.showDialog(null, "OK");
+            int dialogResult = fc.showDialog(this, "OK");
             if (dialogResult == JFileChooser.APPROVE_OPTION) {
                 File selected = fc.getSelectedFile();
                 outputDitText.setText(selected.getAbsolutePath());
@@ -113,6 +154,7 @@ public class MainForm extends JFrame {
             String path1 = chooseText.getText();
             String path2 = outputDitText.getText();
             List<SingleTuple> wholeList = null;
+
             if (path1.equals("")) {
                 JOptionPane.showMessageDialog(null, "Input directory is empty");
                 return;
@@ -144,5 +186,9 @@ public class MainForm extends JFrame {
                 }
             }
         });
+    }
+
+    public Properties getProp() {
+        return prop;
     }
 }
