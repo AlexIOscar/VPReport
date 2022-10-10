@@ -19,7 +19,7 @@ public class SettingsForm extends JFrame {
     private JCheckBox decrCBox;
     private JTextField decrToField;
     private JComboBox<String> CRBMcomboBox;
-    private JLabel cRBDetectingField;
+    private JTextField shiftsField;
 
     public SettingsForm(String title, MainForm parent) throws HeadlessException {
         super(title);
@@ -33,10 +33,12 @@ public class SettingsForm extends JFrame {
         initSaveButton(parent.getProp());
         initChkBoxes();
 
+        pack();
         this.setVisible(true);
     }
 
     public void initSettings(Properties props) {
+        //читаем настройки в поля формы
         carRBfield.setText(props.getProperty("carRB", "50"));
         suspTGfield.setText(props.getProperty("suspTG", "400"));
         suspPTfild.setText(props.getProperty("suspPT", "600"));
@@ -44,6 +46,7 @@ public class SettingsForm extends JFrame {
         whipLenField.setText(props.getProperty("whipLen", "12000"));
         kimField.setText(props.getProperty("kim", "0.85"));
         decrToField.setText(props.getProperty("decrSuspProcTo", "50"));
+        shiftsField.setText(props.getProperty("shiftTimes", "8:00;  20:00"));
         decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
         CRBMcomboBox.setSelectedIndex(Integer.parseInt(props.getProperty("CRBMethod", "0")));
 
@@ -52,6 +55,7 @@ public class SettingsForm extends JFrame {
 
     public void initSaveButton(Properties props) {
         saveSettButton.addActionListener(e -> {
+            //форсим изменения в обработчик отчетов
             try {
                 ReportProcessor.setSingleRBTime(Integer.parseInt(carRBfield.getText()));
                 ReportProcessor.setGapLimit(Integer.parseInt(suspTGfield.getText()));
@@ -66,6 +70,7 @@ public class SettingsForm extends JFrame {
                 JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
                 return;
             }
+            //и сохраняем в настройках
             props.setProperty("carRB", carRBfield.getText());
             props.setProperty("suspTG", suspTGfield.getText());
             props.setProperty("suspPT", suspPTfild.getText());
@@ -73,6 +78,7 @@ public class SettingsForm extends JFrame {
             props.setProperty("whipLen", whipLenField.getText());
             props.setProperty("kim", kimField.getText());
             props.setProperty("decrSuspProcTo", decrToField.getText());
+            props.setProperty("shiftTimes", shiftsField.getText());
             props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
             props.setProperty("CRBMethod", String.valueOf(CRBMcomboBox.getSelectedIndex()));
 

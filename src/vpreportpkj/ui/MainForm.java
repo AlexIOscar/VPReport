@@ -59,6 +59,7 @@ public class MainForm extends JFrame {
         this.setSize(Integer.parseInt(prop.getProperty("formWidth", "780")),
                 Integer.parseInt(prop.getProperty("formHeight", "260")));
 
+        //применяем настройки
         try {
             ReportProcessor.setSingleRBTime(Integer.parseInt(prop.getProperty("carRB", "50")));
             ReportProcessor.setGapLimit(Integer.parseInt(prop.getProperty("suspTG", "400")));
@@ -177,7 +178,15 @@ public class MainForm extends JFrame {
             }
 
             if (wholeList != null) {
-                List<List<SingleTuple>> periods = Util.splitPeriods(wholeList, new int[]{8, 20});
+                List<List<SingleTuple>> periods = null;
+                try {
+                    int[] shiftHrs = Util.getShiftsSplits(prop.getProperty("shiftTimes", "8:00; 20:00")).get(0);
+                    int[] shiftMin = Util.getShiftsSplits(prop.getProperty("shiftTimes", "8:00; 20:00")).get(1);
+                    periods = Util.splitPeriods(wholeList, shiftHrs, shiftMin);
+                } catch (NumberFormatException nfe) {
+                    JOptionPane.showMessageDialog(this, "Wrong format of shift times, check settings\n" + nfe.getMessage());
+                    return;
+                }
 
                 try {
                     ReportProcessor.pushToFile((outputDitText.getText() + "\\" + reportName.getText() + "_common.txt"),

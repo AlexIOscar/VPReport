@@ -132,4 +132,23 @@ public class Util {
         paths.forEach(p -> outList.addAll(getTuplesList(p.toString())));
         return outList;
     }
+
+    public static List<int[]> getShiftsSplits(String formattedInput) throws NumberFormatException {
+        List<int[]> out = new ArrayList<>(2);
+        formattedInput = formattedInput.replaceAll(" +", "");
+        String[] shiftTimes = formattedInput.split(";");
+        //hrs
+        out.add(new int[shiftTimes.length]);
+        //min
+        out.add(new int[shiftTimes.length]);
+        for (int i = 0; i < shiftTimes.length; i++) {
+            String[] hrs_min = shiftTimes[i].split(":");
+            if (hrs_min.length != 2) {
+                throw new NumberFormatException("It's necessary to set at least one pair in HH:MM format");
+            }
+            out.get(0)[i] = Integer.parseInt(hrs_min[0]);
+            out.get(1)[i] = Integer.parseInt(hrs_min[1]);
+        }
+        return out;
+    }
 }
