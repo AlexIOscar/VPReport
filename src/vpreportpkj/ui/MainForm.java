@@ -68,6 +68,7 @@ public class MainForm extends JFrame {
             ReportProcessor.setKim(Double.parseDouble(prop.getProperty("kim", "0.85")));
             ReportProcessor.setIsDecrSuspPT(Boolean.parseBoolean(prop.getProperty("decrSPTbox", "false")));
             ReportProcessor.setDecrSuspTTo(Integer.parseInt(prop.getProperty("decrSuspProcTo", "50")));
+            ReportProcessor.setCRMMethodIndex(Integer.parseInt(prop.getProperty("CRBMethod", "0")));
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
         }
@@ -103,7 +104,7 @@ public class MainForm extends JFrame {
     }
 
     private String getAbout() {
-        return "Version: " + version + "\nOEMZ IT Department, 2022\nDeveloped by Tolstokulakov A.V.\nLocal phone: none";
+        return "Version: " + version + "\nOEMZ IT Department, 2022\nDeveloped by Tolstokulakov A.V.\nLocal phone: 7096";
     }
 
     private void initWindowListeners() {

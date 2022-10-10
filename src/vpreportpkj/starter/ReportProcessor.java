@@ -21,6 +21,7 @@ public class ReportProcessor {
     static double kim = 0.85;
     static boolean isDecrSuspPT = false;
     static int decrSuspTTo = 50;
+    static int CRMMethodIndex = 0;
 
     public static void pushToFile(String outPath, List<SingleTuple> tuples) {
         List<String> rep = getReport(tuples, true, true);
@@ -72,7 +73,7 @@ public class ReportProcessor {
                 .append(tuples.get(tuples.size() - 1).getCompleteTime()).append('\n');
 
         long idleTime = 0;
-        int carriageRollbacks = 0;
+        int carriageRollbacksByGaps = 0;
 
         for (int i = 0; i < tuples.size() - 1; i++) {
             Date completeThis = tuples.get(i).getCompleteTime();
@@ -80,7 +81,7 @@ public class ReportProcessor {
             if (!completeThis.after(startNext)) {
                 long gap = ((startNext.getTime() - completeThis.getTime()) / 1000);
                 if (gap >= singleRBTime) {
-                    carriageRollbacks++;
+                    carriageRollbacksByGaps++;
                 }
                 if (exData1 && gap > gapLimit) {
                     exBuilder.append(gap).append(" seconds gap detected between ").append(completeThis)
@@ -106,7 +107,6 @@ public class ReportProcessor {
         }
 
         long operationTime = uptime - idleTime;
-        long dealTime = operationTime + (long) carriageRollbacks * singleRBTime;
 
         //подсчет общих данных
         int holes = 0;
@@ -120,10 +120,23 @@ public class ReportProcessor {
             cuts = cuts + tuple.getCuts();
         }
 
+        long dealTime;
+        switch (CRMMethodIndex) {
+            default:
+            case 0:
+                dealTime = operationTime + (long) (cuts - tuples.size()) * singleRBTime;
+                break;
+            case 1:
+                dealTime = operationTime + (long) carriageRollbacksByGaps * singleRBTime;
+                break;
+            case 2:
+                dealTime = operationTime + (long) (length / whipLength / kim) * singleRBTime;
+        }
+
         sb.append("Total uptime, min: ").append(uptime / 60).append('\n')
                 .append("Total idle, min: ").append(idleTime / 60).append('\n')
                 .append("Operation time, min: ").append(operationTime / 60).append('\n')
-                .append("Carriage rollbacks (estimated by time gaps): ").append(carriageRollbacks).append('\n')
+                .append("Carriage rollbacks (estimated by time gaps): ").append(carriageRollbacksByGaps).append('\n')
                 .append("Carriage rollbacks (estimated by total length): ").append((int) (length / whipLength / kim)).append('\n')
                 .append("Carriage rollbacks (estimated by extra cuts): ").append(cuts - tuples.size()).append('\n')
                 .append("Deal time, min: ").append(dealTime / 60).append('\n')
@@ -233,5 +246,9 @@ public class ReportProcessor {
 
     public static void setDecrSuspTTo(int decrSuspTTo) {
         ReportProcessor.decrSuspTTo = decrSuspTTo;
+    }
+
+    public static void setCRMMethodIndex(int CRMMethodIndex) {
+        ReportProcessor.CRMMethodIndex = CRMMethodIndex;
     }
 }

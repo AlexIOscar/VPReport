@@ -18,6 +18,8 @@ public class SettingsForm extends JFrame {
     private JTextField kimField;
     private JCheckBox decrCBox;
     private JTextField decrToField;
+    private JComboBox<String> CRBMcomboBox;
+    private JLabel cRBDetectingField;
 
     public SettingsForm(String title, MainForm parent) throws HeadlessException {
         super(title);
@@ -29,7 +31,7 @@ public class SettingsForm extends JFrame {
 
         initSettings(parent.getProp());
         initSaveButton(parent.getProp());
-        initCBoxes();
+        initChkBoxes();
 
         this.setVisible(true);
     }
@@ -43,6 +45,8 @@ public class SettingsForm extends JFrame {
         kimField.setText(props.getProperty("kim", "0.85"));
         decrToField.setText(props.getProperty("decrSuspProcTo", "50"));
         decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
+        CRBMcomboBox.setSelectedIndex(Integer.parseInt(props.getProperty("CRBMethod", "0")));
+
         decrToField.setEnabled(decrCBox.isSelected());
     }
 
@@ -57,6 +61,7 @@ public class SettingsForm extends JFrame {
                 ReportProcessor.setKim(Double.parseDouble(kimField.getText()));
                 ReportProcessor.setIsDecrSuspPT(decrCBox.isSelected());
                 ReportProcessor.setDecrSuspTTo(Integer.parseInt(decrToField.getText()));
+                ReportProcessor.setCRMMethodIndex(CRBMcomboBox.getSelectedIndex());
             } catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
                 return;
@@ -69,12 +74,13 @@ public class SettingsForm extends JFrame {
             props.setProperty("kim", kimField.getText());
             props.setProperty("decrSuspProcTo", decrToField.getText());
             props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
+            props.setProperty("CRBMethod", String.valueOf(CRBMcomboBox.getSelectedIndex()));
 
             dispose();
         });
     }
 
-    private void initCBoxes() {
+    private void initChkBoxes() {
         decrCBox.addChangeListener(e -> decrToField.setEnabled(decrCBox.isSelected()));
     }
 }
