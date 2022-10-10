@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReportReader {
+    /**
+     * read the file by input path, divide to Strings and return as List
+     * @param filePath the file read to
+     * @return List of String-lines from raw report
+     */
     public static List<String> getStrArr(String filePath) {
         List<String> lineList = new ArrayList<>();
 

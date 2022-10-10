@@ -23,6 +23,11 @@ public class ReportProcessor {
     static int decrSuspTTo = 50;
     static int CRMMethodIndex = 0;
 
+    /**
+     * Выгружает отчет в файл
+     * @param outPath путь выгрузки
+     * @param tuples входной список кортежей, по которым необходимо сгенерировать отчет
+     */
     public static void pushToFile(String outPath, List<SingleTuple> tuples) {
         List<String> rep = getReport(tuples, true, true);
         //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
@@ -39,6 +44,12 @@ public class ReportProcessor {
         }
     }
 
+    /**
+     * Выгружает отчет в файл (своего рода, перегруженная версия отчета для единого списка, но выведенная под
+     * собственным именем из-за технических ограничений обобщений (generics erasure)).
+     * @param outPath путь выгрузки
+     * @param tuplesList входной список кортежей, разбитый на части, по которым необходимо сгенерировать отчет
+     */
     public static void pushToFileForList(String outPath, List<List<SingleTuple>> tuplesList) {
         List<String> rep = getReportForList(tuplesList, false, false);
         //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
@@ -55,6 +66,13 @@ public class ReportProcessor {
         }
     }
 
+    /**
+     * Получение отчета в виде списка строк. Каждая строка представляет собой определенную часть данных
+     * @param tuples лист кортежей, для которых строится отчет
+     * @param exData1 флаг включения расширенных данных - подозрительно высоких потерь времени между кортежами
+     * @param exData2 флаг включения расширенных данных - подозрительно длительных случаев обработки одной детали
+     * @return Отчет в виде списка строк
+     */
     public static List<String> getReport(List<SingleTuple> tuples, boolean exData1, boolean exData2) {
         if (tuples.size() == 0) {
             throw new RuntimeException("Processing set is empty");
@@ -167,6 +185,14 @@ public class ReportProcessor {
         return report;
     }
 
+    /**
+     * Версия получения отчета для списка кортежей, разбитого на части. Выведена под собственным именем (вместо
+     * перегрузки) из-за технических ограничений обобщений (generics erasure)).
+     * @param shifts разбитый на части список кортежей
+     * @param exData1 флаг включения расширенных данных - подозрительно высоких потерь времени между кортежами
+     * @param exData2 флаг включения расширенных данных - подозрительно длительных случаев обработки одной детали
+     * @return Отчет в виде списка строк
+     */
     public static List<String> getReportForList(List<List<SingleTuple>> shifts, boolean exData1, boolean exData2) {
         List<String> out = new ArrayList<>();
         for (List<SingleTuple> period : shifts) {
@@ -176,6 +202,12 @@ public class ReportProcessor {
         return out;
     }
 
+    /**
+     * Получить сводку подозрительно высоких трудоемкостей в списке кортежей
+     * @param inputList Входной список кортежей
+     * @return Строковое представление всех случаев, в которых детектировано подозрительно высокое время обработки
+     * одной детали из входящего списка
+     */
     public static String getOverLabours(List<SingleTuple> inputList) {
         StringBuilder sb = new StringBuilder("\nSuspicious labours (more than " + processingLimit + " seconds):\n");
         inputList.stream().filter(l -> l.getDuration() > processingLimit).forEach(l -> sb.append(l.getDuration())
@@ -191,6 +223,12 @@ public class ReportProcessor {
         return sb.toString();
     }
 
+    /**
+     * Выводит в консоль случаи двойного и тройного перекрытия времени кортежами. Под перекрытием подразумевается
+     * ситуация, когда в одно время производится более одной детали (детектируется одновременное производство двух и
+     * трех деталей)
+     * @param tuples Входной лист кортежей, на которых выполняется тестирование перекрытия
+     */
     private static void printOverlayingInfo(List<SingleTuple> tuples) {
         //double overlaying
         for (int i = 0; i < tuples.size() - 2; i++) {
