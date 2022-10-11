@@ -20,6 +20,16 @@ public class SettingsForm extends JFrame {
     private JTextField decrToField;
     private JComboBox<String> CRBMcomboBox;
     private JTextField shiftsField;
+    private JLabel RBCTimeLabel;
+    private JLabel suspTGLabel;
+    private JLabel suspPTLabel;
+    private JLabel shDurLabel;
+    private JLabel shPtsLabel;
+    private JLabel whipLenLabel;
+    private JLabel kimLabel;
+    private JLabel CRBMethLabel;
+    private JComboBox<String> langComBox;
+    private JLabel langLabel;
 
     public SettingsForm(String title, MainForm parent) throws HeadlessException {
         super(title);
@@ -32,6 +42,10 @@ public class SettingsForm extends JFrame {
         initSettings(parent.getProp());
         initSaveButton(parent.getProp());
         initChkBoxes();
+
+        if (parent.getProp().getProperty("lang", "1").equals("1")) {
+            initRusUI(parent);
+        }
 
         pack();
         this.setVisible(true);
@@ -49,6 +63,7 @@ public class SettingsForm extends JFrame {
         shiftsField.setText(props.getProperty("shiftTimes", "8:00;  20:00"));
         decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
         CRBMcomboBox.setSelectedIndex(Integer.parseInt(props.getProperty("CRBMethod", "0")));
+        langComBox.setSelectedIndex(Integer.parseInt(props.getProperty("lang", "1")));
 
         decrToField.setEnabled(decrCBox.isSelected());
     }
@@ -81,6 +96,7 @@ public class SettingsForm extends JFrame {
             props.setProperty("shiftTimes", shiftsField.getText());
             props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
             props.setProperty("CRBMethod", String.valueOf(CRBMcomboBox.getSelectedIndex()));
+            props.setProperty("lang", String.valueOf(langComBox.getSelectedIndex()));
 
             dispose();
         });
@@ -88,5 +104,34 @@ public class SettingsForm extends JFrame {
 
     private void initChkBoxes() {
         decrCBox.addChangeListener(e -> decrToField.setEnabled(decrCBox.isSelected()));
+    }
+
+    /**
+     * Подход к локализации довольно кривой: все формы сначала строятся с английским, но если в свойствах установлен
+     * русский, то все лейблы заменяются на русские еще до отображения форм
+     * @param parent
+     */
+    private void initRusUI(MainForm parent) {
+        parent.getSrnLabel().setText("Сохранить с именем");
+        parent.getCdButton().setText("Директория-источник");
+        parent.getSetOutDirButton().setText("Сохранить в директорию");
+        parent.getDealButton().setText("Создать отчет");
+        parent.getJMenuBar().getMenu(0).getItem(0).setText("Настройки...");
+        parent.getJMenuBar().getMenu(0).getItem(1).setText("Выход");
+        saveSettButton.setText("Сохранить");
+        RBCTimeLabel.setText("Время отката каретки, сек");
+        suspPTLabel.setText("Подозрительное время обработки, больше чем, сек");
+        suspTGLabel.setText("Подозрительный перерыв, больше чем, сек");
+        decrCBox.setText("Уменьшать подозр. время обработки до, сек:");
+        shDurLabel.setText("Длительность смены, минут");
+        shPtsLabel.setText("Точки разбиения на смены, список через \";\"");
+        whipLenLabel.setText("Длина единицы сырья, мм");
+        kimLabel.setText("Коэффициент использования металла");
+        CRBMethLabel.setText("Методика детектирования откатов каретки");
+        CRBMcomboBox.removeAllItems();
+        CRBMcomboBox.addItem("по количеству рубов");
+        CRBMcomboBox.addItem("по паузам в обработке");
+        CRBMcomboBox.addItem("по общей обработанной длине");
+        langLabel.setText("Выбрать язык интерфейса (требуется перезапуск)");
     }
 }

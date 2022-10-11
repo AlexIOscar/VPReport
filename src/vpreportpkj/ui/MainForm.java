@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class MainForm extends JFrame {
-    String version = "v1.0";
+    String version = "v1.1";
     private JPanel panel1;
     private JTextField chooseText;
     private JTextField outputDitText;
@@ -23,11 +23,9 @@ public class MainForm extends JFrame {
     private JButton dealButton;
     private JButton cdButton;
     private JButton setOutDirButton;
+    private JLabel srnLabel;
     private final Properties prop = new Properties();
     private File propFile;
-
-    public int test;
-
 
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
@@ -58,6 +56,10 @@ public class MainForm extends JFrame {
 
         this.setSize(Integer.parseInt(prop.getProperty("formWidth", "780")),
                 Integer.parseInt(prop.getProperty("formHeight", "260")));
+
+        if (prop.getProperty("lang", "1").equals("1")) {
+            initRusUI();
+        }
 
         //применяем настройки
         try {
@@ -200,7 +202,32 @@ public class MainForm extends JFrame {
         });
     }
 
+    protected void initRusUI() {
+        getSrnLabel().setText("Сохранить с именем");
+        getCdButton().setText("Директория-источник");
+        getSetOutDirButton().setText("Сохранить в директорию");
+        getDealButton().setText("Создать отчет");
+        getJMenuBar().getMenu(0).getItem(0).setText("Настройки...");
+        getJMenuBar().getMenu(0).getItem(1).setText("Выход");
+    }
+
     public Properties getProp() {
         return prop;
+    }
+
+    public JLabel getSrnLabel() {
+        return srnLabel;
+    }
+
+    public JButton getDealButton() {
+        return dealButton;
+    }
+
+    public JButton getCdButton() {
+        return cdButton;
+    }
+
+    public JButton getSetOutDirButton() {
+        return setOutDirButton;
     }
 }
