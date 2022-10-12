@@ -1,6 +1,7 @@
 package vpreportpkj.starter;
 
 import vpreportpkj.core.SingleTuple;
+import vpreportpkj.core.Util;
 
 import javax.swing.*;
 import java.io.File;
@@ -54,6 +55,8 @@ public class ReportProcessor {
         List<String> rep = getReportForList(tuplesList, false, false);
         //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
         File outF = new File(outPath);
+
+        //Util.updateCyclic(tuplesList, "C:\\Users\\Tolstokulakov_AV\\VPRP\\pcRepo.dat");
 
         try (FileWriter writer = new FileWriter(outF, false)) {
             for (String str : rep) {

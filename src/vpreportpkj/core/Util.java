@@ -14,8 +14,9 @@ public class Util {
      * кортежи, лежащие внутри интервалов, на которые разбивается весь охватываемый кортежами период суточными
      * метками, передаваемыми в виде пары массивов splitHours и splitMinutes. Суточная метка
      * образуется путем объединения значений из этих двух массивов с равными индексами.
-     * @param input входной список кортежей
-     * @param splitHours массив часовых суточных меток
+     *
+     * @param input        входной список кортежей
+     * @param splitHours   массив часовых суточных меток
      * @param splitMinutes массив минутных суточных меток
      * @return Разбитый на части список кортежей в виде списка списков.
      */
@@ -59,10 +60,11 @@ public class Util {
      * Генерирует список временных точек, по которым необходимо разбить временной интервал между first и last,
      * используя суточные метки времени, содержащиеся в паре массивов splitHours и splitMinutes. Суточная метка
      * образуется путем объединения значений из этих двух массивов с равными индексами.
-     * @param splitHours массив часовых суточных меток
+     *
+     * @param splitHours   массив часовых суточных меток
      * @param splitMinutes массив минутных суточных меток
-     * @param first дата начала разбиваемого интервала
-     * @param last дата окончания разбиваемого интервала
+     * @param first        дата начала разбиваемого интервала
+     * @param last         дата окончания разбиваемого интервала
      * @return Список временных меток, разбивающих интервал
      */
     private static List<Date> getSplitMap(int[] splitHours, int[] splitMinutes, Date first, Date last) {
@@ -104,7 +106,8 @@ public class Util {
 
     /**
      * Перегруженная версия, разбивающая список кортежей на части только по часовым суточным меткам
-     * @param input входящий список кортежей
+     *
+     * @param input      входящий список кортежей
      * @param splitHours список часовых суточных меток
      * @return Разбитый на части список кортежей в виде списка списков.
      */
@@ -123,12 +126,13 @@ public class Util {
      */
     public static List<SingleTuple> sortTuples(List<SingleTuple> inputList) {
         return inputList.stream()
-                .sorted((t1, t2) -> (int) (t1.getStartTime().getTime() - t2.getStartTime().getTime()))
+                .sorted((t1, t2) -> (int) (t1.getStartTime().getTime() / 1000 - t2.getStartTime().getTime() / 1000))
                 .collect(Collectors.toList());
     }
 
     /**
      * Преобразует файл сырого отчета по указанному пути в список отсортированных кортежей
+     *
      * @param path Путь размещения сырого отчета
      * @return Список кортежей
      */
@@ -148,6 +152,7 @@ public class Util {
 
     /**
      * Получение единого списка кортежей по всем файлам, размещенным в директории, с обходом в глубину
+     *
      * @param path Директория, по которой собираются данные
      * @return Список кортежей
      */
@@ -172,6 +177,7 @@ public class Util {
     /**
      * Генерирует пару массивов равной длины, каждый из которых содержит целые числа, соответствующие часам (нулевой
      * массив) и минутам (первый массив) суточных меток времени, для разбиения списков кортежей на смены
+     *
      * @param formattedInput отформатированный строковый вход
      * @return пара массивов в виде двухместного листа
      * @throws NumberFormatException в случае неверного входного формата строки
@@ -193,5 +199,22 @@ public class Util {
             out.get(1)[i] = Integer.parseInt(hrs_min[1]);
         }
         return out;
+    }
+
+    public static long updateRepo(List<List<SingleTuple>> inputList, String path) {
+        long count = inputList.stream().flatMap(Collection::stream).map(LabourEngine::pushLabour).filter(x -> x).count();
+        LabourEngine.pushRepo(path);
+        return count;
+    }
+
+    public static void updateCyclic(List<List<SingleTuple>> inputList, String path) {
+        Map<String, LabourEngine.CyclicStorage<Integer>> fastRepo = LabourEngine.pullCyclicRepo(path);
+        LabourEngine le;
+        if (fastRepo == null) {
+            fastRepo = new HashMap<>();
+        }
+        le = new LabourEngine(fastRepo);
+        inputList.stream().flatMap(Collection::stream).forEach(le::pushLabToCyclic);
+        LabourEngine.pushCyclicRepo(path, fastRepo);
     }
 }

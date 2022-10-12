@@ -109,7 +109,7 @@ public class SettingsForm extends JFrame {
     /**
      * Подход к локализации довольно кривой: все формы сначала строятся с английским, но если в свойствах установлен
      * русский, то все лейблы заменяются на русские еще до отображения форм
-     * @param parent
+     * @param parent форма-родитель (заглавная)
      */
     private void initRusUI(MainForm parent) {
         parent.getSrnLabel().setText("Сохранить с именем");
