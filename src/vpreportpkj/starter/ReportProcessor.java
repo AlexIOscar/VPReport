@@ -1,5 +1,6 @@
 package vpreportpkj.starter;
 
+import vpreportpkj.core.LabourEngine;
 import vpreportpkj.core.SingleTuple;
 import vpreportpkj.core.Util;
 
@@ -23,11 +24,15 @@ public class ReportProcessor {
     static boolean isDecrSuspPT = false;
     static int decrSuspTTo = 50;
     static int CRMMethodIndex = 0;
+    static boolean useFastRepo = true;
+
+    public static LabourEngine le;
 
     /**
      * Выгружает отчет в файл
+     *
      * @param outPath путь выгрузки
-     * @param tuples входной список кортежей, по которым необходимо сгенерировать отчет
+     * @param tuples  входной список кортежей, по которым необходимо сгенерировать отчет
      */
     public static void pushToFile(String outPath, List<SingleTuple> tuples) {
         List<String> rep = getReport(tuples, true, true);
@@ -48,7 +53,8 @@ public class ReportProcessor {
     /**
      * Выгружает отчет в файл (своего рода, перегруженная версия отчета для единого списка, но выведенная под
      * собственным именем из-за технических ограничений обобщений (generics erasure)).
-     * @param outPath путь выгрузки
+     *
+     * @param outPath    путь выгрузки
      * @param tuplesList входной список кортежей, разбитый на части, по которым необходимо сгенерировать отчет
      */
     public static void pushToFileForList(String outPath, List<List<SingleTuple>> tuplesList) {
@@ -56,7 +62,9 @@ public class ReportProcessor {
         //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
         File outF = new File(outPath);
 
-        //Util.updateCyclic(tuplesList, "C:\\Users\\Tolstokulakov_AV\\VPRP\\pcRepo.dat");
+        if (useFastRepo) {
+            System.out.println("nothing");
+        }
 
         try (FileWriter writer = new FileWriter(outF, false)) {
             for (String str : rep) {
@@ -70,8 +78,8 @@ public class ReportProcessor {
     }
 
     /**
-     * Получение отчета в виде списка строк. Каждая строка представляет собой определенную часть данных
-     * @param tuples лист кортежей, для которых строится отчет
+     * Получение отчета в виде списка строк. Каждая строка представляет собой определенную часть данных     *
+     * @param tuples  лист кортежей, для которых строится отчет
      * @param exData1 флаг включения расширенных данных - подозрительно высоких потерь времени между кортежами
      * @param exData2 флаг включения расширенных данных - подозрительно длительных случаев обработки одной детали
      * @return Отчет в виде списка строк
@@ -119,6 +127,7 @@ public class ReportProcessor {
                 (tuples.get((tuples.size() - 1)).getCompleteTime().getTime() - tuples.get(0).getStartTime().getTime()) / 1000;
 
 
+        //TODO использовать репозиторий где-то тут
         if (isDecrSuspPT) {
             long deltaTime = 0L;
             AtomicLong decreaseTime = new AtomicLong();
@@ -191,7 +200,8 @@ public class ReportProcessor {
     /**
      * Версия получения отчета для списка кортежей, разбитого на части. Выведена под собственным именем (вместо
      * перегрузки) из-за технических ограничений обобщений (generics erasure)).
-     * @param shifts разбитый на части список кортежей
+     *
+     * @param shifts  разбитый на части список кортежей
      * @param exData1 флаг включения расширенных данных - подозрительно высоких потерь времени между кортежами
      * @param exData2 флаг включения расширенных данных - подозрительно длительных случаев обработки одной детали
      * @return Отчет в виде списка строк
@@ -207,6 +217,7 @@ public class ReportProcessor {
 
     /**
      * Получить сводку подозрительно высоких трудоемкостей в списке кортежей
+     *
      * @param inputList Входной список кортежей
      * @return Строковое представление всех случаев, в которых детектировано подозрительно высокое время обработки
      * одной детали из входящего списка
@@ -230,6 +241,7 @@ public class ReportProcessor {
      * Выводит в консоль случаи двойного и тройного перекрытия времени кортежами. Под перекрытием подразумевается
      * ситуация, когда в одно время производится более одной детали (детектируется одновременное производство двух и
      * трех деталей)
+     *
      * @param tuples Входной лист кортежей, на которых выполняется тестирование перекрытия
      */
     private static void printOverlayingInfo(List<SingleTuple> tuples) {

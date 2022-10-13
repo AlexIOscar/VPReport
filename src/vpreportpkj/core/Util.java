@@ -201,20 +201,54 @@ public class Util {
         return out;
     }
 
-    public static long updateRepo(List<List<SingleTuple>> inputList, String path) {
-        long count = inputList.stream().flatMap(Collection::stream).map(LabourEngine::pushLabour).filter(x -> x).count();
-        LabourEngine.pushRepo(path);
+    //Дальше бизнес-логика хранения и получения экспертного времени
+
+    //обновить полный репозиторий по адресу
+    public static long updateRepo(List<List<SingleTuple>> inputList, String pathFullRepo)
+            throws IOException, ClassNotFoundException {
+        LabourEngine le = new LabourEngine(pathFullRepo, null);
+        le.pullRepo();
+        long count = inputList.stream().flatMap(Collection::stream).map(le::pushLabour).filter(x -> x).count();
+        le.pushRepo();
         return count;
     }
 
-    public static void updateCyclic(List<List<SingleTuple>> inputList, String path) {
-        Map<String, LabourEngine.CyclicStorage<Integer>> fastRepo = LabourEngine.pullCyclicRepo(path);
-        LabourEngine le;
-        if (fastRepo == null) {
-            fastRepo = new HashMap<>();
-        }
-        le = new LabourEngine(fastRepo);
+    //обновить быстрый репозиторий по адресу
+    public static void updateCyclic(List<List<SingleTuple>> inputList, String pathFastRepo)
+            throws IOException, ClassNotFoundException {
+        LabourEngine le = new LabourEngine(null, pathFastRepo);
+        le.pullCyclicRepo();
         inputList.stream().flatMap(Collection::stream).forEach(le::pushLabToCyclic);
-        LabourEngine.pushCyclicRepo(path, fastRepo);
+        le.pushCyclicRepo();
+    }
+
+    public static void updateCyclic(List<List<SingleTuple>> inputList, LabourEngine le)
+            throws IOException, ClassNotFoundException {
+        le.pullCyclicRepo();
+        inputList.stream().flatMap(Collection::stream).forEach(le::pushLabToCyclic);
+        le.pushCyclicRepo();
+    }
+
+    //получить быстрый репозиторий по адресу файла, как правило, для кеширования в память приложения
+    public static LabourEngine getFastLabEng(String pathFastRepo) throws IOException, ClassNotFoundException {
+        LabourEngine le = new LabourEngine(null, pathFastRepo);
+        le.pullCyclicRepo();
+        return le;
+    }
+
+    //для использования с закешированным в памяти репозиторием
+    public static int getExpertTime(String key, LabourEngine le) {
+        Integer[] storage = le.getFastRepo().get(key).getStorage();
+        if(storage[0] == null){
+            throw new IllegalStateException("repository is empty");
+        }
+        int sum = Arrays.stream(storage).mapToInt(i -> i).sum();
+        return sum / storage.length;
+    }
+
+    //для использования без кеширования
+    public static int getExpertTime(String key, String pathFastRepo) throws IOException, ClassNotFoundException {
+        LabourEngine le = getFastLabEng(pathFastRepo);
+        return getExpertTime(key, le);
     }
 }

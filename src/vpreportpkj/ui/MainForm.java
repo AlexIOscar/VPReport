@@ -1,5 +1,6 @@
 package vpreportpkj.ui;
 
+import vpreportpkj.core.LabourEngine;
 import vpreportpkj.core.SingleTuple;
 import vpreportpkj.core.Util;
 import vpreportpkj.starter.ReportProcessor;
@@ -11,6 +12,7 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -26,6 +28,7 @@ public class MainForm extends JFrame {
     private JLabel srnLabel;
     private final Properties prop = new Properties();
     private File propFile;
+    private LabourEngine labEng;
 
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
@@ -43,6 +46,7 @@ public class MainForm extends JFrame {
         initDealButton();
         initWindowListeners();
         initProperties();
+        initFastRepo();
         applySettings();
 
         //this is the last for prevent flickering
@@ -155,6 +159,24 @@ public class MainForm extends JFrame {
         });
     }
 
+    private void initFastRepo() throws IOException {
+        String dir = System.getProperty("user.home") + "\\VPRP\\";
+        File repo = new File(dir + "pcFastRepo.dat");
+        if (!repo.exists()) {
+            new File(dir).mkdir();
+            repo.createNewFile();
+        }
+
+        try {
+            //может создаться null
+            labEng = Util.getFastLabEng(prop.getProperty("fastRepoPath", repo.getAbsolutePath()));
+            ReportProcessor.le = labEng;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
     public void initDealButton() {
         dealButton.addActionListener(e -> {
             String path1 = chooseText.getText();
@@ -180,7 +202,14 @@ public class MainForm extends JFrame {
             }
 
             if (wholeList != null) {
-                List<List<SingleTuple>> periods = null;
+
+                try {
+                    Util.updateCyclic(Collections.singletonList(wholeList), labEng);
+                } catch (IOException | ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                List<List<SingleTuple>> periods;
                 try {
                     int[] shiftHrs = Util.getShiftsSplits(prop.getProperty("shiftTimes", "8:00; 20:00")).get(0);
                     int[] shiftMin = Util.getShiftsSplits(prop.getProperty("shiftTimes", "8:00; 20:00")).get(1);
@@ -197,6 +226,7 @@ public class MainForm extends JFrame {
                             periods);
                 } catch (Exception nsfe) {
                     JOptionPane.showMessageDialog(null, nsfe.getMessage());
+                    nsfe.printStackTrace();
                 }
             }
         });

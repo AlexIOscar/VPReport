@@ -1,29 +1,23 @@
 package vpreportpkj.core;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 public class LabourEngine {
-    static Map<String, Map<Long, Integer>> labourRepo = new HashMap<>();
-    static String path = "C:\\Users\\Tolstokulakov_AV\\VPRP\\pcRepo.dat";
-    private final Map<String, CyclicStorage<Integer>> fastRepo;
+    private Map<String, Map<Long, Integer>> labourRepo;
+    private final String pathRepo;
+    private final String pathFastRepo;
+    private Map<String, CyclicStorage<Integer>> fastRepo;
 
-    public LabourEngine(Map<String, CyclicStorage<Integer>> fastRepo) {
-        this.fastRepo = fastRepo;
+    public LabourEngine(String pathRepo, String pathFastRepo) {
+        this.pathRepo = pathRepo;
+        this.pathFastRepo = pathFastRepo;
     }
 
-    /*
-    static {
-        pullRepo(path);
-    }
-     */
-
-    static boolean pushLabour(SingleTuple st) {
+    public boolean pushLabour(SingleTuple st) {
         Long time = st.completeTime.getTime() / 1000;
         String mainKey = createKey(st);
         Map<Long, Integer> innerMap = labourRepo.get(mainKey);
@@ -51,49 +45,58 @@ public class LabourEngine {
         storage.push(st.duration);
     }
 
-    private static String createKey(SingleTuple st) {
+    public static String createKey(SingleTuple st) {
         return (st.mark + st.position).replaceAll("\\s+| +", "");
     }
 
-    static void pushRepo(String path) {
+    public void pushRepo() {
         try (ObjectOutputStream oos = new ObjectOutputStream(
-                Files.newOutputStream(Paths.get(path)))) {
+                Files.newOutputStream(Paths.get(pathRepo)))) {
             oos.writeObject(labourRepo);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
     }
 
-    static void pullRepo(String path) {
+    public Map<String, Map<Long, Integer>> pullRepo() throws IOException, ClassNotFoundException {
         try (ObjectInputStream ois = new ObjectInputStream
-                (Files.newInputStream(Paths.get(path)))) {
-            labourRepo = (Map) ois.readObject();
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-
-    static void pushCyclicRepo(String path, Map<String, CyclicStorage<Integer>> repo) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(
-                Files.newOutputStream(Paths.get(path)))) {
-            oos.writeObject(repo);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-
-    static Map<String, CyclicStorage<Integer>> pullCyclicRepo(String path) {
-        try (ObjectInputStream ois = new ObjectInputStream
-                (Files.newInputStream(Paths.get(path)))) {
+                (Files.newInputStream(Paths.get(pathRepo)))) {
             return (Map) ois.readObject();
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
-            return null;
+            throw ex;
         }
     }
 
-    public static Map<String, Map<Long, Integer>> getLabourRepo() {
+    public void pushCyclicRepo() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                Files.newOutputStream(Paths.get(pathFastRepo)))) {
+            oos.writeObject(fastRepo);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    public Map<String, CyclicStorage<Integer>> pullCyclicRepo() throws IOException, ClassNotFoundException {
+        long length = new File(pathFastRepo).length();
+        if (length == 0) {
+            return null;
+        }
+        try (ObjectInputStream ois = new ObjectInputStream
+                (Files.newInputStream(Paths.get(pathFastRepo)))) {
+            return (Map) ois.readObject();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
+        }
+    }
+
+    public Map<String, Map<Long, Integer>> getLabourRepo() {
         return labourRepo;
+    }
+
+    public Map<String, CyclicStorage<Integer>> getFastRepo() {
+        return fastRepo;
     }
 
     public static class CyclicStorage<T> implements Serializable {
@@ -106,7 +109,7 @@ public class LabourEngine {
             this.storage = storage;
         }
 
-        public void push (T value) {
+        public void push(T value) {
             storage[pointer] = value;
             pointer++;
             pointer = pointer % capacity;
