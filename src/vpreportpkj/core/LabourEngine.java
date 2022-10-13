@@ -8,13 +8,28 @@ import java.util.Map;
 
 public class LabourEngine {
     private Map<String, Map<Long, Integer>> labourRepo;
-    private final String pathRepo;
-    private final String pathFastRepo;
+    private String pathRepo;
+    private String pathFastRepo;
     private Map<String, CyclicStorage<Integer>> fastRepo;
 
     public LabourEngine(String pathRepo, String pathFastRepo) {
         this.pathRepo = pathRepo;
         this.pathFastRepo = pathFastRepo;
+    }
+
+    private LabourEngine() {
+    }
+
+    public static LabourEngine getFastEngine(String pathFastRepo) {
+        LabourEngine out = new LabourEngine();
+        out.pathFastRepo = pathFastRepo;
+        out.labourRepo = new HashMap<>();
+        try {
+            out.fastRepo = out.pullCyclicRepo();
+        } catch (IOException | ClassNotFoundException e) {
+            out.fastRepo = new HashMap<>();
+        }
+        return out;
     }
 
     public boolean pushLabour(SingleTuple st) {
@@ -63,7 +78,7 @@ public class LabourEngine {
                 (Files.newInputStream(Paths.get(pathRepo)))) {
             return (Map) ois.readObject();
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            System.out.println("FastRepo pulling error, the empty repo will be created");
             throw ex;
         }
     }
@@ -78,10 +93,6 @@ public class LabourEngine {
     }
 
     public Map<String, CyclicStorage<Integer>> pullCyclicRepo() throws IOException, ClassNotFoundException {
-        long length = new File(pathFastRepo).length();
-        if (length == 0) {
-            return null;
-        }
         try (ObjectInputStream ois = new ObjectInputStream
                 (Files.newInputStream(Paths.get(pathFastRepo)))) {
             return (Map) ois.readObject();

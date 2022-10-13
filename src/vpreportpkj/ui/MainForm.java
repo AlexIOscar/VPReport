@@ -159,22 +159,15 @@ public class MainForm extends JFrame {
         });
     }
 
-    private void initFastRepo() throws IOException {
+    private void initFastRepo() {
         String dir = System.getProperty("user.home") + "\\VPRP\\";
         File repo = new File(dir + "pcFastRepo.dat");
         if (!repo.exists()) {
             new File(dir).mkdir();
-            repo.createNewFile();
+            //repo.createNewFile();
         }
-
-        try {
-            //может создаться null
-            labEng = Util.getFastLabEng(prop.getProperty("fastRepoPath", repo.getAbsolutePath()));
-            ReportProcessor.le = labEng;
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        labEng = LabourEngine.getFastEngine(prop.getProperty("fastRepoPath", repo.getAbsolutePath()));
+        ReportProcessor.le = labEng;
     }
 
     public void initDealButton() {
