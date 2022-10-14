@@ -134,7 +134,9 @@ public class MainForm extends JFrame {
                     JOptionPane.showMessageDialog(null, "Ошибка взаимодействия с файлом конфигурации");
                     throw new RuntimeException(ex);
                 }
-                labEng.pushFastRepo();
+                if (useLabEngine) {
+                    labEng.pushFastRepo();
+                }
                 System.exit(0);
             }
         });

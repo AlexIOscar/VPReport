@@ -2,6 +2,7 @@ package vpreportpkj.starter;
 
 import vpreportpkj.core.LabourEngine;
 import vpreportpkj.core.SingleTuple;
+import vpreportpkj.core.Util;
 
 import javax.swing.*;
 import java.io.File;
@@ -83,7 +84,7 @@ public class ReportProcessor {
         if (tuples.size() == 0) {
             throw new RuntimeException("Processing set is empty");
         }
-
+        tuples = Util.sortTuples(tuples);
         List<String> report = new ArrayList<>();
 
         StringBuilder exBuilder = null;
@@ -111,8 +112,7 @@ public class ReportProcessor {
                     exBuilder.append(gap).append(" seconds gap detected between ").append(completeThis)
                             .append(" and ").append(startNext).append('\n');
                 }
-
-                idleTime = idleTime + ((startNext.getTime() - completeThis.getTime()) / 1000);
+                idleTime = idleTime + gap;
             }
         }
         //printOverlayingInfo(tuples);
