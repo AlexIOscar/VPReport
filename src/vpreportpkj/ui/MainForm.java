@@ -28,7 +28,6 @@ public class MainForm extends JFrame {
     private final Properties prop = new Properties();
     private File propFile;
     private LabourEngine labEng;
-    private boolean useLabEngine = true;
 
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
@@ -46,12 +45,12 @@ public class MainForm extends JFrame {
         initDealButton();
         initWindowListeners();
         initProperties();
+        applySettings();
 
-        if (useLabEngine) {
+        //обязателен вызов после applySettings, иначе состояние ReportProcessor будет дефолтным
+        if (ReportProcessor.useFastRepo) {
             initFastRepo();
         }
-
-        applySettings();
 
         //this is the last for prevent flickering
         setVisible(true);
@@ -80,6 +79,7 @@ public class MainForm extends JFrame {
             ReportProcessor.setIsDecrSuspPT(Boolean.parseBoolean(prop.getProperty("decrSPTbox", "false")));
             ReportProcessor.setDecrSuspTTo(Integer.parseInt(prop.getProperty("decrSuspProcTo", "50")));
             ReportProcessor.setCRMMethodIndex(Integer.parseInt(prop.getProperty("CRBMethod", "0")));
+            ReportProcessor.useFastRepo = Boolean.parseBoolean(prop.getProperty("useRepoCBox", "false"));
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
         }
@@ -134,7 +134,7 @@ public class MainForm extends JFrame {
                     JOptionPane.showMessageDialog(null, "Ошибка взаимодействия с файлом конфигурации");
                     throw new RuntimeException(ex);
                 }
-                if (useLabEngine) {
+                if (ReportProcessor.useFastRepo) {
                     labEng.pushFastRepo();
                 }
                 System.exit(0);
@@ -166,7 +166,7 @@ public class MainForm extends JFrame {
         });
     }
 
-    private void initFastRepo() {
+    public void initFastRepo() {
         String dir = System.getProperty("user.home") + "\\VPRP\\";
         File repo = new File(dir + "pcFastRepo.dat");
         if (!repo.exists()) {

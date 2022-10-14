@@ -30,6 +30,7 @@ public class SettingsForm extends JFrame {
     private JLabel CRBMethLabel;
     private JComboBox<String> langComBox;
     private JLabel langLabel;
+    private JCheckBox useRepoCBox;
 
     public SettingsForm(String title, MainForm parent) throws HeadlessException {
         super(title);
@@ -40,7 +41,7 @@ public class SettingsForm extends JFrame {
         setContentPane(panel);
 
         initSettings(parent.getProp());
-        initSaveButton(parent.getProp());
+        initSaveButton(parent.getProp(), parent);
         initChkBoxes();
 
         if (parent.getProp().getProperty("lang", "1").equals("1")) {
@@ -62,13 +63,14 @@ public class SettingsForm extends JFrame {
         decrToField.setText(props.getProperty("decrSuspProcTo", "50"));
         shiftsField.setText(props.getProperty("shiftTimes", "8:00;  20:00"));
         decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
+        useRepoCBox.setSelected(Boolean.parseBoolean(props.getProperty("useRepoCBox", "false")));
         CRBMcomboBox.setSelectedIndex(Integer.parseInt(props.getProperty("CRBMethod", "0")));
         langComBox.setSelectedIndex(Integer.parseInt(props.getProperty("lang", "1")));
 
         decrToField.setEnabled(decrCBox.isSelected());
     }
 
-    public void initSaveButton(Properties props) {
+    public void initSaveButton(Properties props, MainForm mf) {
         saveSettButton.addActionListener(e -> {
             //форсим изменения в обработчик отчетов
             try {
@@ -81,6 +83,11 @@ public class SettingsForm extends JFrame {
                 ReportProcessor.setIsDecrSuspPT(decrCBox.isSelected());
                 ReportProcessor.setDecrSuspTTo(Integer.parseInt(decrToField.getText()));
                 ReportProcessor.setCRMMethodIndex(CRBMcomboBox.getSelectedIndex());
+                ReportProcessor.useFastRepo = useRepoCBox.isSelected();
+                if (useRepoCBox.isSelected()) {
+                    mf.initFastRepo();
+                }
+
             } catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
                 return;
@@ -95,6 +102,7 @@ public class SettingsForm extends JFrame {
             props.setProperty("decrSuspProcTo", decrToField.getText());
             props.setProperty("shiftTimes", shiftsField.getText());
             props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
+            props.setProperty("useRepoCBox", useRepoCBox.isSelected() ? "true" : "false");
             props.setProperty("CRBMethod", String.valueOf(CRBMcomboBox.getSelectedIndex()));
             props.setProperty("lang", String.valueOf(langComBox.getSelectedIndex()));
 
@@ -109,6 +117,7 @@ public class SettingsForm extends JFrame {
     /**
      * Подход к локализации довольно кривой: все формы сначала строятся с английским, но если в свойствах установлен
      * русский, то все лейблы заменяются на русские еще до отображения форм
+     *
      * @param parent форма-родитель (заглавная)
      */
     private void initRusUI(MainForm parent) {
@@ -133,5 +142,6 @@ public class SettingsForm extends JFrame {
         CRBMcomboBox.addItem("по паузам в обработке");
         CRBMcomboBox.addItem("по общей обработанной длине");
         langLabel.setText("Выбрать язык интерфейса (требуется перезапуск)");
+        useRepoCBox.setText("Использовать внутреннее хранилище данных о времени");
     }
 }

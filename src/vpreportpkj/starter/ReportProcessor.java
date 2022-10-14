@@ -24,7 +24,7 @@ public class ReportProcessor {
     static boolean isDecrSuspPT = false;
     static int decrSuspTTo = 50;
     static int CRMMethodIndex = 0;
-    static boolean useFastRepo = true;
+    public static boolean useFastRepo = false;
     public static LabourEngine le;
 
     /**
