@@ -2,7 +2,6 @@ package vpreportpkj.starter;
 
 import vpreportpkj.core.LabourEngine;
 import vpreportpkj.core.SingleTuple;
-import vpreportpkj.core.Util;
 
 import javax.swing.*;
 import java.io.File;
@@ -25,7 +24,6 @@ public class ReportProcessor {
     static int decrSuspTTo = 50;
     static int CRMMethodIndex = 0;
     static boolean useFastRepo = true;
-
     public static LabourEngine le;
 
     /**
@@ -62,10 +60,6 @@ public class ReportProcessor {
         //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
         File outF = new File(outPath);
 
-        if (useFastRepo) {
-            System.out.println("nothing");
-        }
-
         try (FileWriter writer = new FileWriter(outF, false)) {
             for (String str : rep) {
                 writer.write(str);
@@ -79,6 +73,7 @@ public class ReportProcessor {
 
     /**
      * Получение отчета в виде списка строк. Каждая строка представляет собой определенную часть данных     *
+     *
      * @param tuples  лист кортежей, для которых строится отчет
      * @param exData1 флаг включения расширенных данных - подозрительно высоких потерь времени между кортежами
      * @param exData2 флаг включения расширенных данных - подозрительно длительных случаев обработки одной детали
@@ -126,17 +121,25 @@ public class ReportProcessor {
         long uptime =
                 (tuples.get((tuples.size() - 1)).getCompleteTime().getTime() - tuples.get(0).getStartTime().getTime()) / 1000;
 
-
-        //TODO использовать репозиторий где-то тут
+        long operationTime;
         if (isDecrSuspPT) {
-            long deltaTime = 0L;
-            AtomicLong decreaseTime = new AtomicLong();
-            long suspTimes = tuples.stream().filter(t -> t.getDuration() > processingLimit).peek(t -> decreaseTime.addAndGet(t.getDuration())).count();
-            deltaTime = decreaseTime.get() - suspTimes * decrSuspTTo;
-            idleTime += deltaTime;
+            if (useFastRepo) {
+                AtomicLong increaseTime = new AtomicLong();
+                tuples.forEach(t -> increaseTime.addAndGet(le.chkTWAAdv(t, 3)));
+                //это по факту - операционное время
+                operationTime = increaseTime.get();
+                idleTime = uptime - operationTime;
+            } else {
+                long deltaTime;
+                AtomicLong decreaseTime = new AtomicLong();
+                long suspTimes = tuples.stream().filter(t -> t.getDuration() > processingLimit).peek(t -> decreaseTime.addAndGet(t.getDuration())).count();
+                deltaTime = decreaseTime.get() - suspTimes * decrSuspTTo;
+                idleTime += deltaTime;
+                operationTime = uptime - idleTime;
+            }
+        } else {
+            operationTime = uptime - idleTime;
         }
-
-        long operationTime = uptime - idleTime;
 
         //подсчет общих данных
         int holes = 0;

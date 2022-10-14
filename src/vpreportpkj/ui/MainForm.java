@@ -12,12 +12,11 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 public class MainForm extends JFrame {
-    String version = "v1.1";
+    String version = "v1.2";
     private JPanel panel1;
     private JTextField chooseText;
     private JTextField outputDitText;
@@ -29,6 +28,7 @@ public class MainForm extends JFrame {
     private final Properties prop = new Properties();
     private File propFile;
     private LabourEngine labEng;
+    private boolean useLabEngine = true;
 
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
@@ -46,7 +46,11 @@ public class MainForm extends JFrame {
         initDealButton();
         initWindowListeners();
         initProperties();
-        initFastRepo();
+
+        if (useLabEngine) {
+            initFastRepo();
+        }
+
         applySettings();
 
         //this is the last for prevent flickering
@@ -130,6 +134,7 @@ public class MainForm extends JFrame {
                     JOptionPane.showMessageDialog(null, "Ошибка взаимодействия с файлом конфигурации");
                     throw new RuntimeException(ex);
                 }
+                labEng.pushFastRepo();
                 System.exit(0);
             }
         });
@@ -164,9 +169,13 @@ public class MainForm extends JFrame {
         File repo = new File(dir + "pcFastRepo.dat");
         if (!repo.exists()) {
             new File(dir).mkdir();
-            //repo.createNewFile();
+            //получаем пустой движок, ассоциируем путь
+            labEng = LabourEngine.getFastEngine(repo.getAbsolutePath());
+            //и записываем его в файл
+            labEng.pushFastRepo();
         }
-        labEng = LabourEngine.getFastEngine(prop.getProperty("fastRepoPath", repo.getAbsolutePath()));
+        //не может прийти null, но может прийти пустой репозиторий
+        labEng = LabourEngine.getFastEngine(repo.getAbsolutePath());
         ReportProcessor.le = labEng;
     }
 
@@ -195,13 +204,6 @@ public class MainForm extends JFrame {
             }
 
             if (wholeList != null) {
-
-                try {
-                    Util.updateCyclic(Collections.singletonList(wholeList), labEng);
-                } catch (IOException | ClassNotFoundException ex) {
-                    throw new RuntimeException(ex);
-                }
-
                 List<List<SingleTuple>> periods;
                 try {
                     int[] shiftHrs = Util.getShiftsSplits(prop.getProperty("shiftTimes", "8:00; 20:00")).get(0);
