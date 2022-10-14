@@ -113,7 +113,7 @@ public class LabourEngine {
     }
 
     //получить экспертное время из репозитория по ключу
-    public int getExpertTime(SingleTuple st) {
+    private int getExpertTime(SingleTuple st) {
         String key = createKey(st);
         CyclicStorage<Integer> cst = fastRepo.get(key);
         Integer[] storage;

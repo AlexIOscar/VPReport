@@ -25,6 +25,7 @@ public class ReportProcessor {
     static int decrSuspTTo = 50;
     static int CRMMethodIndex = 0;
     public static boolean useFastRepo = false;
+    public static int filterFactor = 4;
     public static LabourEngine le;
 
     /**
@@ -73,7 +74,7 @@ public class ReportProcessor {
     }
 
     /**
-     * Получение отчета в виде списка строк. Каждая строка представляет собой определенную часть данных     *
+     * Получение отчета в виде списка строк. Каждая строка представляет собой определенную часть данных
      *
      * @param tuples  лист кортежей, для которых строится отчет
      * @param exData1 флаг включения расширенных данных - подозрительно высоких потерь времени между кортежами
@@ -97,6 +98,13 @@ public class ReportProcessor {
         sb.append("Source: work period between ").append(tuples.get(0).getStartTime()).append(" and ")
                 .append(tuples.get(tuples.size() - 1).getCompleteTime()).append('\n');
 
+        sb.append("Mode: ");
+        if (useFastRepo && isDecrSuspPT) {
+            sb.append("smart full check-&-reducing activated\n");
+        }
+        if (isDecrSuspPT && !useFastRepo) {
+            sb.append("brute reducing of suspicious work-times activated\n");
+        }
         long idleTime = 0;
         int carriageRollbacksByGaps = 0;
 
@@ -112,7 +120,7 @@ public class ReportProcessor {
                     exBuilder.append(gap).append(" seconds gap detected between ").append(completeThis)
                             .append(" and ").append(startNext).append('\n');
                 }
-                idleTime = idleTime + gap;
+                idleTime += gap;
             }
         }
         //printOverlayingInfo(tuples);
@@ -121,25 +129,24 @@ public class ReportProcessor {
         long uptime =
                 (tuples.get((tuples.size() - 1)).getCompleteTime().getTime() - tuples.get(0).getStartTime().getTime()) / 1000;
 
+        //У этого куска сложная история, потому он так криво сделан. При случае отрефакторить
         long operationTime;
         if (isDecrSuspPT) {
             if (useFastRepo) {
-                AtomicLong increaseTime = new AtomicLong();
-                tuples.forEach(t -> increaseTime.addAndGet(le.chkTWAAdv(t, 3)));
-                //это по факту - операционное время
-                operationTime = increaseTime.get();
-                idleTime = uptime - operationTime;
+                AtomicLong decreaseTime = new AtomicLong();
+                tuples.forEach(t -> {
+                    decreaseTime.addAndGet(t.getDuration() - le.chkTWAAdv(t, filterFactor));
+                });
+                idleTime += decreaseTime.get();
             } else {
                 long deltaTime;
                 AtomicLong decreaseTime = new AtomicLong();
                 long suspTimes = tuples.stream().filter(t -> t.getDuration() > processingLimit).peek(t -> decreaseTime.addAndGet(t.getDuration())).count();
                 deltaTime = decreaseTime.get() - suspTimes * decrSuspTTo;
                 idleTime += deltaTime;
-                operationTime = uptime - idleTime;
             }
-        } else {
-            operationTime = uptime - idleTime;
         }
+        operationTime = uptime - idleTime;
 
         //подсчет общих данных
         int holes = 0;
@@ -169,13 +176,19 @@ public class ReportProcessor {
         sb.append("Total uptime, min: ").append(uptime / 60).append('\n')
                 .append("Total idle, min: ").append(idleTime / 60).append('\n')
                 .append("Operation time, min: ").append(operationTime / 60).append('\n')
-                .append("Carriage rollbacks (estimated by time gaps): ").append(carriageRollbacksByGaps).append('\n')
-                .append("Carriage rollbacks (estimated by total length): ").append((int) (length / whipLength / kim)).append('\n')
-                .append("Carriage rollbacks (estimated by extra cuts): ").append(cuts - tuples.size()).append('\n')
+                .append("Carriage rollbacks (estimated by time gaps): ").append(carriageRollbacksByGaps)
+                .append(CRMMethodIndex == 1 ? " (active)" : "").append('\n')
+                .append("Carriage rollbacks (estimated by total length): ").append((int) (length / whipLength / kim))
+                .append(CRMMethodIndex == 2 ? " (active)" : "").append('\n')
+                .append("Carriage rollbacks (estimated by extra cuts): ").append(cuts - tuples.size())
+                .append(CRMMethodIndex == 0 ? " (active)" : "").append('\n')
                 .append("Deal time, min: ").append(dealTime / 60).append('\n')
                 .append("Workload, %, by period duration & opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
-                .append("Workload, %, by period duration & deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n')
-                .append("Workload, %, by shift duration & deal time: ").append(((double) dealTime / (double) (shiftDuration * 60)) * 100).append('\n');
+                .append("Workload, %, by period duration & deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n');
+
+        if (uptime/60.0 < shiftDuration * 1.1){
+            sb.append("Workload, %, by shift duration & deal time: ").append(((double) dealTime / (double) (shiftDuration * 60)) * 100).append('\n');
+        }
 
         //вывод общих данных
         sb.append("____________________________Total amounts____________________________\n");
