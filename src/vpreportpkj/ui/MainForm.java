@@ -79,7 +79,7 @@ public class MainForm extends JFrame {
             ReportProcessor.setIsDecrSuspPT(Boolean.parseBoolean(prop.getProperty("decrSPTbox", "false")));
             ReportProcessor.setDecrSuspTTo(Integer.parseInt(prop.getProperty("decrSuspProcTo", "50")));
             ReportProcessor.setCRMMethodIndex(Integer.parseInt(prop.getProperty("CRBMethod", "0")));
-            ReportProcessor.useFastRepo = Boolean.parseBoolean(prop.getProperty("useRepoCBox", "false"));
+            ReportProcessor.useFastRepo = Boolean.parseBoolean(prop.getProperty("useRepoRB", "false"));
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
         }

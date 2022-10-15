@@ -30,7 +30,8 @@ public class SettingsForm extends JFrame {
     private JLabel CRBMethLabel;
     private JComboBox<String> langComBox;
     private JLabel langLabel;
-    private JCheckBox useRepoCBox;
+    private JRadioButton bruteDecrRB;
+    private JRadioButton smartDecrRB;
 
     public SettingsForm(String title, MainForm parent) throws HeadlessException {
         super(title);
@@ -42,7 +43,7 @@ public class SettingsForm extends JFrame {
 
         initSettings(parent.getProp());
         initSaveButton(parent.getProp(), parent);
-        initChkBoxes();
+        initActiveElements();
 
         if (parent.getProp().getProperty("lang", "1").equals("1")) {
             initRusUI(parent);
@@ -62,12 +63,15 @@ public class SettingsForm extends JFrame {
         kimField.setText(props.getProperty("kim", "0.85"));
         decrToField.setText(props.getProperty("decrSuspProcTo", "50"));
         shiftsField.setText(props.getProperty("shiftTimes", "8:00;  20:00"));
-        decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
-        useRepoCBox.setSelected(Boolean.parseBoolean(props.getProperty("useRepoCBox", "false")));
+        bruteDecrRB.setSelected(Boolean.parseBoolean(props.getProperty("decrSuspRB", "false")));
+        smartDecrRB.setSelected(Boolean.parseBoolean(props.getProperty("useRepoRB", "false")));
         CRBMcomboBox.setSelectedIndex(Integer.parseInt(props.getProperty("CRBMethod", "0")));
         langComBox.setSelectedIndex(Integer.parseInt(props.getProperty("lang", "1")));
+        decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
 
-        decrToField.setEnabled(decrCBox.isSelected());
+        bruteDecrRB.setEnabled(decrCBox.isSelected());
+        smartDecrRB.setEnabled(decrCBox.isSelected());
+        decrToField.setEnabled(bruteDecrRB.isSelected() && bruteDecrRB.isEnabled());
     }
 
     public void initSaveButton(Properties props, MainForm mf) {
@@ -83,8 +87,8 @@ public class SettingsForm extends JFrame {
                 ReportProcessor.setIsDecrSuspPT(decrCBox.isSelected());
                 ReportProcessor.setDecrSuspTTo(Integer.parseInt(decrToField.getText()));
                 ReportProcessor.setCRMMethodIndex(CRBMcomboBox.getSelectedIndex());
-                ReportProcessor.useFastRepo = useRepoCBox.isSelected();
-                if (useRepoCBox.isSelected()) {
+                ReportProcessor.useFastRepo = smartDecrRB.isSelected();
+                if (smartDecrRB.isSelected() && smartDecrRB.isEnabled()) {
                     mf.initFastRepo();
                 }
 
@@ -101,17 +105,24 @@ public class SettingsForm extends JFrame {
             props.setProperty("kim", kimField.getText());
             props.setProperty("decrSuspProcTo", decrToField.getText());
             props.setProperty("shiftTimes", shiftsField.getText());
-            props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
-            props.setProperty("useRepoCBox", useRepoCBox.isSelected() ? "true" : "false");
+            props.setProperty("decrSuspRB", bruteDecrRB.isSelected() ? "true" : "false");
+            props.setProperty("useRepoRB", smartDecrRB.isSelected() ? "true" : "false");
             props.setProperty("CRBMethod", String.valueOf(CRBMcomboBox.getSelectedIndex()));
             props.setProperty("lang", String.valueOf(langComBox.getSelectedIndex()));
+            props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
 
             dispose();
         });
     }
 
-    private void initChkBoxes() {
-        decrCBox.addChangeListener(e -> decrToField.setEnabled(decrCBox.isSelected()));
+    private void initActiveElements() {
+        decrCBox.addChangeListener(e -> {
+            bruteDecrRB.setEnabled(decrCBox.isSelected());
+            smartDecrRB.setEnabled(decrCBox.isSelected());
+            decrToField.setEnabled(bruteDecrRB.isSelected() && bruteDecrRB.isEnabled());
+        });
+
+        bruteDecrRB.addChangeListener(e -> decrToField.setEnabled(bruteDecrRB.isSelected()));
     }
 
     /**
@@ -131,7 +142,7 @@ public class SettingsForm extends JFrame {
         RBCTimeLabel.setText("Время отката каретки, сек");
         suspPTLabel.setText("Подозрительное время обработки, больше чем, сек");
         suspTGLabel.setText("Подозрительный перерыв, больше чем, сек");
-        decrCBox.setText("Уменьшать подозр. время обработки до, сек:");
+        bruteDecrRB.setText("Уменьшать подозр. время обработки до, сек:");
         shDurLabel.setText("Длительность смены, минут");
         shPtsLabel.setText("Точки разбиения на смены, список через \";\"");
         whipLenLabel.setText("Длина единицы сырья, мм");
@@ -142,6 +153,7 @@ public class SettingsForm extends JFrame {
         CRBMcomboBox.addItem("по паузам в обработке");
         CRBMcomboBox.addItem("по общей обработанной длине");
         langLabel.setText("Выбрать язык интерфейса (требуется перезапуск)");
-        useRepoCBox.setText("Использовать внутреннее хранилище данных о времени");
+        smartDecrRB.setText("Использовать внутреннее хранилище данных о времени");
+        decrCBox.setText("Адаптировать время выполнения операций");
     }
 }

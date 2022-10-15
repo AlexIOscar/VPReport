@@ -134,9 +134,8 @@ public class ReportProcessor {
         if (isDecrSuspPT) {
             if (useFastRepo) {
                 AtomicLong decreaseTime = new AtomicLong();
-                tuples.forEach(t -> {
-                    decreaseTime.addAndGet(t.getDuration() - le.chkTWAAdv(t, filterFactor));
-                });
+                tuples.forEach(t -> decreaseTime.addAndGet(t.getDuration() - le.chkTWAAdv(t, filterFactor)));
+                tuples.stream().forEach(t -> System.out.println("accepted: " + le.chkTWAAdv(t, filterFactor)));
                 idleTime += decreaseTime.get();
             } else {
                 long deltaTime;
