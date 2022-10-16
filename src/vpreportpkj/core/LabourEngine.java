@@ -205,6 +205,7 @@ public class LabourEngine {
      * @param <T> тип хранимых объектов
      */
     public static class CyclicStorage<T> implements Serializable {
+        private static final long serialVersionUID = 1L;
         private final T[] storage;
         private int pointer = 0;
         private final int capacity;
