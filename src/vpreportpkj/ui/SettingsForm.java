@@ -63,7 +63,7 @@ public class SettingsForm extends JFrame {
         kimField.setText(props.getProperty("kim", "0.85"));
         decrToField.setText(props.getProperty("decrSuspProcTo", "50"));
         shiftsField.setText(props.getProperty("shiftTimes", "8:00;  20:00"));
-        bruteDecrRB.setSelected(Boolean.parseBoolean(props.getProperty("decrSuspRB", "false")));
+        bruteDecrRB.setSelected(Boolean.parseBoolean(props.getProperty("decrSuspRB", "true")));
         smartDecrRB.setSelected(Boolean.parseBoolean(props.getProperty("useRepoRB", "false")));
         CRBMcomboBox.setSelectedIndex(Integer.parseInt(props.getProperty("CRBMethod", "0")));
         langComBox.setSelectedIndex(Integer.parseInt(props.getProperty("lang", "1")));

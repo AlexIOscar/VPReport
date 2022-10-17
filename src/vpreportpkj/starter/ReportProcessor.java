@@ -105,6 +105,10 @@ public class ReportProcessor {
         if (isDecrSuspPT && !useFastRepo) {
             sb.append("brute reducing of suspicious work-times activated\n");
         }
+        if (!isDecrSuspPT) {
+            sb.append("none (work-times \"as-is\")\n");
+        }
+
         long idleTime = 0;
         int carriageRollbacksByGaps = 0;
 
@@ -134,7 +138,7 @@ public class ReportProcessor {
         if (isDecrSuspPT) {
             if (useFastRepo) {
                 AtomicLong decreaseTime = new AtomicLong();
-                tuples.forEach(t -> decreaseTime.addAndGet(t.getDuration() - le.chkTWAAdv(t, filterFactor)));
+                tuples.forEach(t -> decreaseTime.addAndGet(t.getDuration() - le.chkTimeAdv(t, filterFactor, true)));
                 //tuples.stream().forEach(t -> System.out.println("accepted: " + le.chkTWAAdv(t, filterFactor)));
                 idleTime += decreaseTime.get();
             } else {
@@ -185,7 +189,7 @@ public class ReportProcessor {
                 .append("Workload, %, by period duration & opTime: ").append(((double) operationTime / (double) uptime) * 100).append('\n')
                 .append("Workload, %, by period duration & deal time: ").append(((double) dealTime / (double) uptime) * 100).append('\n');
 
-        if (uptime/60.0 < shiftDuration * 1.1){
+        if (uptime / 60.0 < shiftDuration * 1.1) {
             sb.append("Workload, %, by shift duration & deal time: ").append(((double) dealTime / (double) (shiftDuration * 60)) * 100).append('\n');
         }
 
