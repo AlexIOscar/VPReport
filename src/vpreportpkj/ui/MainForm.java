@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class MainForm extends JFrame {
-    String version = "v1.2";
+    String version = "v1.3";
     private JPanel panel1;
     private JTextField chooseText;
     private JTextField outputDitText;
@@ -80,6 +80,8 @@ public class MainForm extends JFrame {
             ReportProcessor.setDecrSuspTTo(Integer.parseInt(prop.getProperty("decrSuspProcTo", "50")));
             ReportProcessor.setCRMMethodIndex(Integer.parseInt(prop.getProperty("CRBMethod", "0")));
             ReportProcessor.useFastRepo = Boolean.parseBoolean(prop.getProperty("useRepoRB", "false"));
+            ReportProcessor.setUpdateRepo(Boolean.parseBoolean(prop.getProperty("updRepo", "true")));
+            ReportProcessor.setFilterFactor(Integer.parseInt(prop.getProperty("ff", "4")));
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
         }

@@ -32,6 +32,9 @@ public class SettingsForm extends JFrame {
     private JLabel langLabel;
     private JRadioButton bruteDecrRB;
     private JRadioButton smartDecrRB;
+    private JCheckBox updRepoCB;
+    private JTextField ffField;
+    private JLabel ffLabel;
 
     public SettingsForm(String title, MainForm parent) throws HeadlessException {
         super(title);
@@ -68,10 +71,16 @@ public class SettingsForm extends JFrame {
         CRBMcomboBox.setSelectedIndex(Integer.parseInt(props.getProperty("CRBMethod", "0")));
         langComBox.setSelectedIndex(Integer.parseInt(props.getProperty("lang", "1")));
         decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
+        updRepoCB.setSelected(Boolean.parseBoolean(props.getProperty("updRepo", "true")));
+        ffField.setText(props.getProperty("ff", "4"));
 
+        //init changeable elements states
         bruteDecrRB.setEnabled(decrCBox.isSelected());
         smartDecrRB.setEnabled(decrCBox.isSelected());
         decrToField.setEnabled(bruteDecrRB.isSelected() && bruteDecrRB.isEnabled());
+        ffLabel.setEnabled(smartDecrRB.isSelected() && smartDecrRB.isEnabled());
+        updRepoCB.setEnabled(smartDecrRB.isSelected() && smartDecrRB.isEnabled());
+        ffField.setEnabled(smartDecrRB.isSelected() && smartDecrRB.isEnabled());
     }
 
     public void initSaveButton(Properties props, MainForm mf) {
@@ -88,6 +97,8 @@ public class SettingsForm extends JFrame {
                 ReportProcessor.setDecrSuspTTo(Integer.parseInt(decrToField.getText()));
                 ReportProcessor.setCRMMethodIndex(CRBMcomboBox.getSelectedIndex());
                 ReportProcessor.useFastRepo = smartDecrRB.isSelected();
+                ReportProcessor.setUpdateRepo(updRepoCB.isSelected());
+                ReportProcessor.setFilterFactor(Integer.parseInt(ffField.getText()));
                 if (smartDecrRB.isSelected() && smartDecrRB.isEnabled()) {
                     mf.initFastRepo();
                 }
@@ -110,6 +121,8 @@ public class SettingsForm extends JFrame {
             props.setProperty("CRBMethod", String.valueOf(CRBMcomboBox.getSelectedIndex()));
             props.setProperty("lang", String.valueOf(langComBox.getSelectedIndex()));
             props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
+            props.setProperty("ff", ffField.getText());
+            props.setProperty("updRepo", updRepoCB.isSelected() ? "true" : "false");
 
             dispose();
         });
@@ -123,6 +136,12 @@ public class SettingsForm extends JFrame {
         });
 
         bruteDecrRB.addChangeListener(e -> decrToField.setEnabled(bruteDecrRB.isSelected()));
+
+        smartDecrRB.addChangeListener(e -> {
+            ffLabel.setEnabled(smartDecrRB.isSelected() && smartDecrRB.isEnabled());
+            updRepoCB.setEnabled(smartDecrRB.isSelected() && smartDecrRB.isEnabled());
+            ffField.setEnabled(smartDecrRB.isSelected() && smartDecrRB.isEnabled());
+        });
     }
 
     /**
@@ -155,5 +174,7 @@ public class SettingsForm extends JFrame {
         langLabel.setText("Выбрать язык интерфейса (требуется перезапуск)");
         smartDecrRB.setText("Использовать внутреннее хранилище данных о времени");
         decrCBox.setText("Адаптировать время выполнения операций");
+        ffLabel.setText("Фильтр-фактор");
+        updRepoCB.setText("Обновлять хранилище входящими данными");
     }
 }

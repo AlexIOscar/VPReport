@@ -15,17 +15,18 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ReportProcessor {
     //характеристики, влияющие на оценочные показатели в отчете
-    static int singleRBTime = 50;
-    static int gapLimit = 400;
-    static int processingLimit = 600;
-    static int shiftDuration = 720;
-    static double whipLength = 12000;
-    static double kim = 0.85;
-    static boolean isDecrSuspPT = false;
-    static int decrSuspTTo = 50;
-    static int CRMMethodIndex = 0;
+    private static int singleRBTime = 50;
+    private static int gapLimit = 400;
+    private static int processingLimit = 600;
+    private static int shiftDuration = 720;
+    private static double whipLength = 12000;
+    private static double kim = 0.85;
+    private static boolean isDecrSuspPT = false;
+    private static int decrSuspTTo = 50;
+    private static int CRMMethodIndex = 0;
     public static boolean useFastRepo = false;
-    public static int filterFactor = 4;
+    private static boolean updateRepo = true;
+    private static int filterFactor = 4;
     public static LabourEngine le;
 
     /**
@@ -138,7 +139,7 @@ public class ReportProcessor {
         if (isDecrSuspPT) {
             if (useFastRepo) {
                 AtomicLong decreaseTime = new AtomicLong();
-                tuples.forEach(t -> decreaseTime.addAndGet(t.getDuration() - le.chkTimeAdv(t, filterFactor, true)));
+                tuples.forEach(t -> decreaseTime.addAndGet(t.getDuration() - le.chkTimeAdv(t, filterFactor, updateRepo)));
                 //tuples.stream().forEach(t -> System.out.println("accepted: " + le.chkTWAAdv(t, filterFactor)));
                 idleTime += decreaseTime.get();
             } else {
@@ -322,5 +323,13 @@ public class ReportProcessor {
 
     public static void setCRMMethodIndex(int CRMMethodIndex) {
         ReportProcessor.CRMMethodIndex = CRMMethodIndex;
+    }
+
+    public static void setUpdateRepo(boolean updateRepo) {
+        ReportProcessor.updateRepo = updateRepo;
+    }
+
+    public static void setFilterFactor(int filterFactor) {
+        ReportProcessor.filterFactor = filterFactor;
     }
 }
