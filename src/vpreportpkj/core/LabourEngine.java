@@ -63,7 +63,7 @@ public class LabourEngine {
     }
 
     public static String createKey(SingleTuple st) {
-        return (st.mark + st.position).replaceAll("\\s+| +", "");
+        return (st.mark + '$' + st.position).toUpperCase().replaceAll("\\s+| +", "");
     }
 
     private void pushRepo() {
