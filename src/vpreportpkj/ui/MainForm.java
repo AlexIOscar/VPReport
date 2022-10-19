@@ -19,7 +19,7 @@ public class MainForm extends JFrame {
     String version = "v1.3";
     private JPanel panel1;
     private JTextField chooseText;
-    private JTextField outputDitText;
+    private JTextField outputDirText;
     private JTextField reportName;
     private JButton dealButton;
     private JButton cdButton;
@@ -58,7 +58,7 @@ public class MainForm extends JFrame {
 
     private void applySettings() {
         chooseText.setText(prop.getProperty("chooseText"));
-        outputDitText.setText(prop.getProperty("outputDitText"));
+        outputDirText.setText(prop.getProperty("outputDirText"));
         reportName.setText(prop.getProperty("reportName", "Report"));
 
         this.setSize(Integer.parseInt(prop.getProperty("formWidth", "780")),
@@ -125,7 +125,7 @@ public class MainForm extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 prop.setProperty("chooseText", chooseText.getText());
-                prop.setProperty("outputDitText", outputDitText.getText());
+                prop.setProperty("outputDirText", outputDirText.getText());
                 prop.setProperty("reportName", reportName.getText());
                 prop.setProperty("formWidth", String.valueOf(getWidth()));
                 prop.setProperty("formHeight", String.valueOf(getHeight()));
@@ -163,7 +163,7 @@ public class MainForm extends JFrame {
             int dialogResult = fc.showDialog(this, "OK");
             if (dialogResult == JFileChooser.APPROVE_OPTION) {
                 File selected = fc.getSelectedFile();
-                outputDitText.setText(selected.getAbsolutePath());
+                outputDirText.setText(selected.getAbsolutePath());
             }
         });
     }
@@ -186,7 +186,7 @@ public class MainForm extends JFrame {
     public void initDealButton() {
         dealButton.addActionListener(e -> {
             String path1 = chooseText.getText();
-            String path2 = outputDitText.getText();
+            String path2 = outputDirText.getText();
             List<SingleTuple> wholeList = null;
 
             if (path1.equals("")) {
@@ -219,9 +219,9 @@ public class MainForm extends JFrame {
                 }
 
                 try {
-                    ReportProcessor.pushToFile((outputDitText.getText() + "\\" + reportName.getText() + "_common.txt"),
+                    ReportProcessor.pushToFile((outputDirText.getText() + "\\" + reportName.getText() + "_common.txt"),
                             wholeList);
-                    ReportProcessor.pushToFileForList((outputDitText.getText() + "\\" + reportName.getText() + "_shifts.txt"),
+                    ReportProcessor.pushToFileForList((outputDirText.getText() + "\\" + reportName.getText() + "_shifts.txt"),
                             periods);
                 } catch (Exception nsfe) {
                     JOptionPane.showMessageDialog(null, nsfe.getMessage());

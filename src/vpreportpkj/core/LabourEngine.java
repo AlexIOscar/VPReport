@@ -1,6 +1,9 @@
 package vpreportpkj.core;
 
+import javax.swing.*;
 import java.io.*;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -20,18 +23,38 @@ public class LabourEngine {
         this.pathFastRepo = pathFastRepo;
     }
 
+    //TODO если файл окажется изменен другим процессом во время попытки pullCyclicRepo, то произойдет исключение, и
+    // будет создан пустой репозиторий, который перезапишет существующий в конце сеанса. Это исключает возможность
+    // работы нескольких клиентов с сетевым общим репозиторием в такой схеме
     public static LabourEngine getFastEngine(String pathFastRepo) {
         LabourEngine out = new LabourEngine(null, pathFastRepo);
-        //полный репозиторий при такой конфигурации остается пустым
+        //полный (fullRepo) репозиторий при такой конфигурации остается пустым
         out.fullRepo = new HashMap<>();
         try {
             out.fastRepo = out.pullCyclicRepo();
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("The fast repo associated file corrupted or doesn't exist, the empty repo will be " +
-                    "returned");
+        } catch (ClassNotFoundException e) {
+            System.out.println(e.getMessage() + ", the empty repo will be returned");
+            out.fastRepo = new HashMap<>();
+        } catch (IOException ioex) {
+            System.out.println(ioex.getMessage() + ", the empty repo will be returned");
             out.fastRepo = new HashMap<>();
         }
         return out;
+    }
+
+    //подтянуть быстрый репозиторий из ассоциированного файла
+    private Map<String, CyclicStorage<Integer>> pullCyclicRepo() throws IOException, ClassNotFoundException {
+        try (FileInputStream fis = new FileInputStream(pathFastRepo);
+             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true)) {
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            return (Map) ois.readObject();
+        } catch (IOException ioex) {
+            System.out.println("IO Exception, file is busy or doesn't exist");
+            throw new IOException("IO Exception, file is busy or doesn't exist", ioex);
+        } catch (ClassNotFoundException cnfex) {
+            System.out.println("Repository reading failure, the file may be corrupted");
+            throw new ClassNotFoundException("Repository reading failure, the file may be corrupted", cnfex);
+        }
     }
 
     private boolean pushLabour(SingleTuple st) {
@@ -80,7 +103,7 @@ public class LabourEngine {
                 (Files.newInputStream(Paths.get(pathFullRepo)))) {
             return (Map) ois.readObject();
         } catch (Exception ex) {
-            System.out.println("FastRepo pulling error, the empty repo will be created");
+            System.out.println("The fast repo associated file is corrupted");
             throw ex;
         }
     }
@@ -93,17 +116,6 @@ public class LabourEngine {
             oos.writeObject(fastRepo);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
-        }
-    }
-
-    //подтянуть быстрый репозиторий из ассоциированного файла
-    private Map<String, CyclicStorage<Integer>> pullCyclicRepo() throws IOException, ClassNotFoundException {
-        try (ObjectInputStream ois = new ObjectInputStream
-                (Files.newInputStream(Paths.get(pathFastRepo)))) {
-            return (Map) ois.readObject();
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            throw ex;
         }
     }
 
