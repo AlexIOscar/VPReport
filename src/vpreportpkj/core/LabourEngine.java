@@ -1,8 +1,8 @@
 package vpreportpkj.core;
 
-import javax.swing.*;
+import vpreportpkj.core.labrepo.LabourRepository;
+
 import java.io.*;
-import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,26 +10,37 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LabourEngine {
-    private Map<String, Map<Long, Integer>> fullRepo;
-    private final String pathFullRepo;
 
     //путь, с файлом по которому ассоциирован быстрый репозиторий
     private final String pathFastRepo;
     private Map<String, CyclicStorage<Integer>> fastRepo;
+    private LabourRepository repository;
 
     //LabEngine нельзя создать напрямую из клиентского кода
-    private LabourEngine(String pathFullRepo, String pathFastRepo) {
-        this.pathFullRepo = pathFullRepo;
+    private LabourEngine(String pathFastRepo) {
         this.pathFastRepo = pathFastRepo;
+    }
+
+    private static LabourEngine getInstance(String pathRepo){
+        LabourEngine out = new LabourEngine(null);
+        try {
+            out.fastRepo = out.pullCyclicRepo();
+        } catch (ClassNotFoundException e) {
+            System.out.println(e.getMessage() + ", the empty repo will be returned");
+            out.fastRepo = new HashMap<>();
+        } catch (IOException ioex) {
+            System.out.println(ioex.getMessage() + ", the empty repo will be returned");
+            out.fastRepo = new HashMap<>();
+        }
+        return null;
     }
 
     //TODO если файл окажется изменен другим процессом во время попытки pullCyclicRepo, то произойдет исключение, и
     // будет создан пустой репозиторий, который перезапишет существующий в конце сеанса. Это исключает возможность
     // работы нескольких клиентов с сетевым общим репозиторием в такой схеме
     public static LabourEngine getFastEngine(String pathFastRepo) {
-        LabourEngine out = new LabourEngine(null, pathFastRepo);
+        LabourEngine out = new LabourEngine(pathFastRepo);
         //полный (fullRepo) репозиторий при такой конфигурации остается пустым
-        out.fullRepo = new HashMap<>();
         try {
             out.fastRepo = out.pullCyclicRepo();
         } catch (ClassNotFoundException e) {
@@ -57,24 +68,6 @@ public class LabourEngine {
         }
     }
 
-    private boolean pushLabour(SingleTuple st) {
-        Long time = st.completeTime.getTime() / 1000;
-        String mainKey = createKey(st);
-        Map<Long, Integer> innerMap = fullRepo.get(mainKey);
-        if (innerMap == null) {
-            Map<Long, Integer> newInner = new HashMap<>();
-            newInner.put(time, st.duration);
-            fullRepo.put(mainKey, newInner);
-            return true;
-        }
-
-        if (!innerMap.containsKey(time)) {
-            innerMap.put(time, st.duration);
-            return true;
-        }
-        return false;
-    }
-
     private void pushLabToFast(SingleTuple st) {
         String mainKey = createKey(st);
         CyclicStorage<Integer> storage = fastRepo.get(mainKey);
@@ -87,25 +80,6 @@ public class LabourEngine {
 
     public static String createKey(SingleTuple st) {
         return (st.mark + '$' + st.position).toUpperCase().replaceAll("\\s+| +", "");
-    }
-
-    private void pushRepo() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(
-                Files.newOutputStream(Paths.get(pathFullRepo)))) {
-            oos.writeObject(fullRepo);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-
-    private Map<String, Map<Long, Integer>> pullRepo() throws IOException, ClassNotFoundException {
-        try (ObjectInputStream ois = new ObjectInputStream
-                (Files.newInputStream(Paths.get(pathFullRepo)))) {
-            return (Map) ois.readObject();
-        } catch (Exception ex) {
-            System.out.println("The fast repo associated file is corrupted");
-            throw ex;
-        }
     }
 
     /**
@@ -207,10 +181,6 @@ public class LabourEngine {
         return st.duration;
     }
 
-    public Map<String, Map<Long, Integer>> getFullRepo() {
-        return fullRepo;
-    }
-
     public Map<String, CyclicStorage<Integer>> getFastRepo() {
         return fastRepo;
     }
@@ -226,7 +196,6 @@ public class LabourEngine {
         private final T[] storage;
         private int pointer = 0;
         private final int capacity;
-
         public CyclicStorage(T[] storage) {
             this.capacity = storage.length;
             this.storage = storage;

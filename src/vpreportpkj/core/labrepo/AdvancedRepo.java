@@ -13,8 +13,8 @@ public class AdvancedRepo implements Serializable, LabourRepository {
     private static final long serialVersionUID = 1L;
     private final int rowCapacity;
     final private Map<String, AdvRepoFacility> repo;
-    private int filterFactor;
-    private boolean update;
+    transient private int filterFactor;
+    transient private boolean update;
     StringBuilder sb = new StringBuilder();
 
     public AdvancedRepo(int capacity, int filterFactor, boolean update) {
@@ -24,8 +24,7 @@ public class AdvancedRepo implements Serializable, LabourRepository {
         this.update = update;
     }
 
-    @Override
-    public void push(SingleTuple st) {
+    private void push(SingleTuple st) {
         String mainKey = createKey(st);
         long minorKey = st.getCompleteTime().getTime() / 1000L;
         int duration = st.getDuration();
