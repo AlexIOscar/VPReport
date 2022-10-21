@@ -11,6 +11,14 @@ import java.util.Map;
 
 import static vpreportpkj.core.LabourEngine.createKey;
 
+/*
+Вытащено из LabourEngine в процессе рефакторинга на вынесение репозиториев в специальный интерфейс. Все равно этот
+тип репозитория не используется ввиду тяжеловесности хранения всей истории операций в памяти, и сериализации/
+десериализации всего этого добра всякий раз при загрузке или останове программы. По этой же причине сигнатуры не
+приведены в соответствие с интерфейсом LabourRepository (метод получения экспертной величины Labour никогда здесь не
+был реализован)
+ */
+
 public class FullRepo {
     private Map<String, Map<Long, Integer>> fullRepo;
     private final String pathFullRepo;

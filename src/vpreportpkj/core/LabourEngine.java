@@ -13,16 +13,45 @@ public class LabourEngine {
 
     //путь, с файлом по которому ассоциирован быстрый репозиторий
     private final String pathFastRepo;
+    private final String pathRepo;
     private Map<String, CyclicStorage<Integer>> fastRepo;
     private LabourRepository repository;
 
     //LabEngine нельзя создать напрямую из клиентского кода
-    private LabourEngine(String pathFastRepo) {
+    private LabourEngine(String pathFastRepo, String pathRepo) {
         this.pathFastRepo = pathFastRepo;
+        this.pathRepo = pathRepo;
     }
 
-    private static LabourEngine getInstance(String pathRepo){
-        LabourEngine out = new LabourEngine(null);
+    //сохранить репозиторий
+    private void saveRepo() {
+        try (FileOutputStream fos = new FileOutputStream(pathRepo);
+             ObjectOutputStream oos = new ObjectOutputStream(fos);
+             FileLock lock = fos.getChannel().lock(0L, Long.MAX_VALUE, true)
+        ) {
+            oos.writeObject(repository);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    //загрузить репозиторий
+    private LabourRepository loadRepo() throws IOException, ClassNotFoundException {
+        try (FileInputStream fis = new FileInputStream(pathRepo);
+             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            return (LabourRepository) ois.readObject();
+        } catch (IOException ioex) {
+            System.out.println("IO Exception, file is busy or doesn't exist");
+            throw new IOException("IO Exception, file is busy or doesn't exist", ioex);
+        } catch (ClassNotFoundException cnfex) {
+            System.out.println("Repository reading failure, the file may be corrupted");
+            throw new ClassNotFoundException("Repository reading failure, the file may be corrupted", cnfex);
+        }
+    }
+
+    private static LabourEngine getInstance(String pathRepo) {
+        LabourEngine out = new LabourEngine(null, pathRepo);
         try {
             out.fastRepo = out.pullCyclicRepo();
         } catch (ClassNotFoundException e) {
@@ -39,7 +68,7 @@ public class LabourEngine {
     // будет создан пустой репозиторий, который перезапишет существующий в конце сеанса. Это исключает возможность
     // работы нескольких клиентов с сетевым общим репозиторием в такой схеме
     public static LabourEngine getFastEngine(String pathFastRepo) {
-        LabourEngine out = new LabourEngine(pathFastRepo);
+        LabourEngine out = new LabourEngine(pathFastRepo, null);
         //полный (fullRepo) репозиторий при такой конфигурации остается пустым
         try {
             out.fastRepo = out.pullCyclicRepo();
@@ -56,8 +85,10 @@ public class LabourEngine {
     //подтянуть быстрый репозиторий из ассоциированного файла
     private Map<String, CyclicStorage<Integer>> pullCyclicRepo() throws IOException, ClassNotFoundException {
         try (FileInputStream fis = new FileInputStream(pathFastRepo);
-             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true)) {
-            ObjectInputStream ois = new ObjectInputStream(fis);
+             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            Set<Integer> s = (Set<Integer>) ois.readObject();
+            Integer i = (Integer) ois.readObject();
             return (Map) ois.readObject();
         } catch (IOException ioex) {
             System.out.println("IO Exception, file is busy or doesn't exist");
@@ -196,6 +227,7 @@ public class LabourEngine {
         private final T[] storage;
         private int pointer = 0;
         private final int capacity;
+
         public CyclicStorage(T[] storage) {
             this.capacity = storage.length;
             this.storage = storage;
@@ -210,6 +242,7 @@ public class LabourEngine {
         public T[] getStorage() {
             return storage;
         }
+
         public int getPointer() {
             return pointer;
         }
