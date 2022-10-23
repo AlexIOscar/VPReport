@@ -28,6 +28,7 @@ public class ReportProcessor {
     private static boolean updateRepo = true;
     private static int filterFactor = 4;
     public static LabourEngine le;
+    public static LabourEngine lec;
 
     /**
      * Выгружает отчет в файл
@@ -140,7 +141,7 @@ public class ReportProcessor {
             if (useFastRepo) {
                 AtomicLong decreaseTime = new AtomicLong();
                 tuples.forEach(t -> decreaseTime.addAndGet(t.getDuration() - le.chkTimeAdv(t, filterFactor, updateRepo)));
-                //tuples.stream().forEach(t -> System.out.println("accepted: " + le.chkTWAAdv(t, filterFactor)));
+                tuples.stream().forEach(t -> lec.getRepository().chkTime(t));
                 idleTime += decreaseTime.get();
             } else {
                 long deltaTime;

@@ -34,6 +34,7 @@ public class AdvancedRepo implements Serializable, LabourRepository {
             AdvRepoFacility fac = new AdvRepoFacility(rowCapacity);
             fac.storage.put(minorKey, duration);
             fac.cyclic.push(minorKey);
+            repo.put(mainKey, fac);
             return;
         }
         //если по такому времени (минорному ключу) уже есть значение, просто выходим
@@ -88,10 +89,19 @@ public class AdvancedRepo implements Serializable, LabourRepository {
         return sb;
     }
 
+    public void setFilterFactor(int filterFactor) {
+        this.filterFactor = filterFactor;
+    }
+
+    public void setUpdate(boolean update) {
+        this.update = update;
+    }
+
     //Класс, объединяющий в пару карту и циклический "счетчик". Поскольку карта не ограничена и не имеет отношения
     // порядка, счетчик служит для того, чтобы знать (и удалять) самое старое значение в карты. Посредством этого
     //механизма обеспечивается нерасширяемость карты свыше фиксированного количества хранимых пар key-value
-    static class AdvRepoFacility {
+    static class AdvRepoFacility implements Serializable{
+        private static final long serialVersionUID = 1L;
         private final CyclicStorage<Long> cyclic;
         private final Map<Long, Integer> storage;
         public AdvRepoFacility(int capacity) {

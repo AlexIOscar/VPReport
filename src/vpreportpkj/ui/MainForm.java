@@ -3,6 +3,7 @@ package vpreportpkj.ui;
 import vpreportpkj.core.LabourEngine;
 import vpreportpkj.core.SingleTuple;
 import vpreportpkj.core.Util;
+import vpreportpkj.core.labrepo.AdvancedRepo;
 import vpreportpkj.starter.ReportProcessor;
 
 import javax.swing.*;
@@ -28,6 +29,7 @@ public class MainForm extends JFrame {
     private final Properties prop = new Properties();
     private File propFile;
     private LabourEngine labEng;
+    private LabourEngine labEngComm;
 
     public MainForm() throws HeadlessException, IOException {
         setContentPane(panel1);
@@ -41,19 +43,21 @@ public class MainForm extends JFrame {
         createMenu();
         setTitle("VP reports processor " + version);
         initChooseButton();
-        initOutButton();
+        initOutDirButton();
         initDealButton();
         initWindowListeners();
         initProperties();
         applySettings();
 
-        //обязателен вызов после applySettings, иначе состояние ReportProcessor будет дефолтным
-        if (ReportProcessor.useFastRepo) {
-            initFastRepo();
-        }
-
         //this is the last for prevent flickering
         setVisible(true);
+
+        //обязателен вызов после applySettings, иначе состояние ReportProcessor будет дефолтным
+        //вызываем после отображения основной формы, могут быть месседж-боксы
+        if (ReportProcessor.useFastRepo) {
+            initFastRepo();
+            initRepo();
+        }
     }
 
     private void applySettings() {
@@ -138,6 +142,11 @@ public class MainForm extends JFrame {
                 }
                 if (ReportProcessor.useFastRepo) {
                     labEng.pushFastRepo();
+                    try {
+                        labEngComm.storeInstance();
+                    } catch (IOException | InterruptedException ex) {
+                        JOptionPane.showMessageDialog(null, "The repository file saving failed");
+                    }
                 }
                 System.exit(0);
             }
@@ -156,7 +165,7 @@ public class MainForm extends JFrame {
         });
     }
 
-    public void initOutButton() {
+    public void initOutDirButton() {
         setOutDirButton.addActionListener(e -> {
             JFileChooser fc = new JFileChooser();
             fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -172,7 +181,9 @@ public class MainForm extends JFrame {
         String dir = System.getProperty("user.home") + "\\VPRP\\";
         File repo = new File(dir + "pcFastRepo.dat");
         if (!repo.exists()) {
-            new File(dir).mkdir();
+            if (new File(dir).exists()) {
+                new File(dir).mkdir();
+            }
             //получаем пустой движок, ассоциируем путь
             labEng = LabourEngine.getFastEngine(repo.getAbsolutePath());
             //и записываем его в файл
@@ -181,6 +192,36 @@ public class MainForm extends JFrame {
         //не может прийти null, но может прийти пустой репозиторий
         labEng = LabourEngine.getFastEngine(repo.getAbsolutePath());
         ReportProcessor.le = labEng;
+    }
+
+    public void initRepo() {
+        String dir = System.getProperty("user.home") + "\\VPRP\\";
+        File repo = new File(dir + "pcRepo.dat");
+        if (!repo.exists()) {
+            if (new File(dir).exists()) {
+                new File(dir).mkdir();
+            }
+            JOptionPane.showMessageDialog(this, "Repo file doesn't exist, probably it's your first start\n" +
+                    "New repository will be created");
+            labEngComm = LabourEngine.getEmpty(null, repo.getAbsolutePath(), new AdvancedRepo(32, 4, true));
+            ReportProcessor.lec = labEngComm;
+            return;
+        }
+
+        try {
+            labEngComm = LabourEngine.getInstance(repo.getAbsolutePath());
+            ((AdvancedRepo) labEngComm.getRepository()).setUpdate(true);
+            ((AdvancedRepo) labEngComm.getRepository()).setFilterFactor(4);
+            this.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+            ReportProcessor.lec = labEngComm;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            JOptionPane.showMessageDialog(this, "Repository reading failure, the file may be corrupted");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "IOException: repository file is out of reach");
+        }
+        this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
     }
 
     public void initDealButton() {

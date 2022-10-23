@@ -1,5 +1,6 @@
 package vpreportpkj.core;
 
+import vpreportpkj.core.labrepo.AdvancedRepo;
 import vpreportpkj.core.labrepo.LabourRepository;
 
 import java.io.*;
@@ -16,6 +17,7 @@ public class LabourEngine {
     private final String pathRepo;
     private Map<String, CyclicStorage<Integer>> fastRepo;
     private LabourRepository repository;
+    public StringBuilder info = new StringBuilder();
 
     //LabEngine нельзя создать напрямую из клиентского кода
     private LabourEngine(String pathFastRepo, String pathRepo) {
@@ -24,44 +26,70 @@ public class LabourEngine {
     }
 
     //сохранить репозиторий
-    private void saveRepo() {
+    private void saveRepo() throws IOException {
         try (FileOutputStream fos = new FileOutputStream(pathRepo);
              ObjectOutputStream oos = new ObjectOutputStream(fos);
-             FileLock lock = fos.getChannel().lock(0L, Long.MAX_VALUE, true)
-        ) {
+             FileLock lock = fos.getChannel().lock(0L, Long.MAX_VALUE, false)) {
             oos.writeObject(repository);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
         }
+    }
+
+    public void storeInstance() throws IOException, InterruptedException {
+        for (int i = 0; i < 10; i++) {
+            try {
+                saveRepo();
+                return;
+            } catch (IOException e) {
+                info.append("saving try failed...next try soon ").append(i);
+                Thread.sleep(1500);
+            }
+        }
+        throw new IOException("saving failed");
     }
 
     //загрузить репозиторий
     private LabourRepository loadRepo() throws IOException, ClassNotFoundException {
         try (FileInputStream fis = new FileInputStream(pathRepo);
-             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true);
-             ObjectInputStream ois = new ObjectInputStream(fis)) {
+             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true)) {
+            ObjectInputStream ois = new ObjectInputStream(fis);
             return (LabourRepository) ois.readObject();
-        } catch (IOException ioex) {
-            System.out.println("IO Exception, file is busy or doesn't exist");
-            throw new IOException("IO Exception, file is busy or doesn't exist", ioex);
-        } catch (ClassNotFoundException cnfex) {
-            System.out.println("Repository reading failure, the file may be corrupted");
-            throw new ClassNotFoundException("Repository reading failure, the file may be corrupted", cnfex);
         }
     }
 
-    private static LabourEngine getInstance(String pathRepo) {
+    /**
+     * Возвращает объект LabourEngine для работы с репозиторием "общего", интерфейсного типа. Быстрый репозиторий
+     * остается в пустом состоянии, использовать его в клиентском коде не следует. Предпринимается не более 10 попыток
+     * с заданным интервалом. В случае не успеха выбрасывается исключение
+     *
+     * @param pathRepo Путь, по которому лежит файл с сериализованным репозиторием
+     * @return LabourEngine с готовым к работе репозиторием.
+     * @throws InterruptedException   в случае прерывания в процессе ожидания
+     * @throws ClassNotFoundException если файл репозитория поврежден/не валиден
+     * @throws IOException            если попытки подключения не завершились успехом
+     */
+    public static LabourEngine getInstance(String pathRepo) throws InterruptedException, ClassNotFoundException, IOException {
         LabourEngine out = new LabourEngine(null, pathRepo);
-        try {
-            out.fastRepo = out.pullCyclicRepo();
-        } catch (ClassNotFoundException e) {
-            System.out.println(e.getMessage() + ", the empty repo will be returned");
-            out.fastRepo = new HashMap<>();
-        } catch (IOException ioex) {
-            System.out.println(ioex.getMessage() + ", the empty repo will be returned");
-            out.fastRepo = new HashMap<>();
+        out.fastRepo = new HashMap<>();
+        for (int i = 0; i < 10; i++) {
+            try {
+                out.repository = out.loadRepo();
+                return out;
+            } catch (ClassNotFoundException e) {
+                out.info.append("Repository reading failure, the file may be corrupted");
+                throw e;
+            } catch (IOException ioex) {
+                out.info.append("IO Exception in try ").append(i);
+                Thread.sleep(1500);
+            }
         }
-        return null;
+        throw new IOException("Repository reading failure");
+    }
+
+    public static LabourEngine getEmpty(String pathFastRepo, String pathRepo, LabourRepository lr){
+        LabourEngine out = new LabourEngine(pathFastRepo, pathRepo);
+        out.fastRepo = new HashMap<>();
+        out.repository = lr;
+        return out;
     }
 
     //TODO если файл окажется изменен другим процессом во время попытки pullCyclicRepo, то произойдет исключение, и
@@ -85,10 +113,8 @@ public class LabourEngine {
     //подтянуть быстрый репозиторий из ассоциированного файла
     private Map<String, CyclicStorage<Integer>> pullCyclicRepo() throws IOException, ClassNotFoundException {
         try (FileInputStream fis = new FileInputStream(pathFastRepo);
-             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true);
-             ObjectInputStream ois = new ObjectInputStream(fis)) {
-            Set<Integer> s = (Set<Integer>) ois.readObject();
-            Integer i = (Integer) ois.readObject();
+             FileLock lock = fis.getChannel().lock(0L, Long.MAX_VALUE, true)) {
+            ObjectInputStream ois = new ObjectInputStream(fis);
             return (Map) ois.readObject();
         } catch (IOException ioex) {
             System.out.println("IO Exception, file is busy or doesn't exist");
@@ -120,7 +146,7 @@ public class LabourEngine {
         try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(Paths.get(pathFastRepo)))) {
             oos.writeObject(fastRepo);
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            System.out.println("Fast repo saving failure");
         }
     }
 
@@ -214,6 +240,10 @@ public class LabourEngine {
 
     public Map<String, CyclicStorage<Integer>> getFastRepo() {
         return fastRepo;
+    }
+
+    public LabourRepository getRepository() {
+        return repository;
     }
 
     /**
