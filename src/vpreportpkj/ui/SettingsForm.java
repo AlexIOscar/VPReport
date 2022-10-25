@@ -1,6 +1,6 @@
 package vpreportpkj.ui;
 
-import vpreportpkj.starter.ReportProcessor;
+import vpreportpkj.core.ReportProcessor;
 
 import javax.swing.*;
 import java.awt.*;

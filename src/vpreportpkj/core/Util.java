@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Util {
+    private static final String dateFormatter = "MM/dd/yyyy-HH.mm.ss";
+
     /**
      * Метод, разбивающий входной список кортежей на части. Каждая часть содержит только
      * кортежи, лежащие внутри интервалов, на которые разбивается весь охватываемый кортежами период суточными
@@ -160,7 +163,7 @@ public class Util {
 
         List<Path> paths = null;
         //File list creation
-        try (Stream<Path> pstr = Files.walk(Paths.get(path))) {
+        try (Stream<Path> pstr = Files.list(Paths.get(path))) {
             paths = pstr.filter(Files::isRegularFile)
                     .filter(f -> f.toString().contains(".txt"))
                     .collect(Collectors.toList());
@@ -199,5 +202,36 @@ public class Util {
             out.get(1)[i] = Integer.parseInt(hrs_min[1]);
         }
         return out;
+    }
+
+    //Изменяет входящий лист!
+    public static List<SingleTuple> resolveTime(List<SingleTuple> inputList) {
+        if (inputList.size() < 2) {
+            return inputList;
+        }
+        inputList = sortTuples(inputList);
+        for (int i = 0; i < inputList.size() - 1; i++) {
+            SingleTuple thisOne = inputList.get(i);
+            SingleTuple nextOne = inputList.get(i + 1);
+            if (thisOne.getCompleteTime().before(nextOne.getStartTime())) {
+                continue;
+            }
+            long overlap = thisOne.getCompleteTime().getTime() - nextOne.getStartTime().getTime();
+            if (overlap == 0) {
+                continue;
+            }
+            thisOne.getCompleteTime().setTime(thisOne.getCompleteTime().getTime() - (overlap / 2));
+            nextOne.getStartTime().setTime(nextOne.getStartTime().getTime() + (overlap / 2));
+            thisOne.duration = (int) ((thisOne.getCompleteTime().getTime() - thisOne.getStartTime().getTime()) / 1000);
+        }
+        //последний элемент - duration пересчитывается отдельно
+        SingleTuple lastOne = inputList.get(inputList.size() - 1);
+        lastOne.duration = (int) ((lastOne.getCompleteTime().getTime() - lastOne.getStartTime().getTime()) / 1000);
+        return inputList;
+    }
+
+    public static String getFormattedDate(Date date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormatter);
+        return simpleDateFormat.format(date);
     }
 }

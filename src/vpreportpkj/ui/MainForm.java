@@ -4,7 +4,7 @@ import vpreportpkj.core.LabourEngine;
 import vpreportpkj.core.SingleTuple;
 import vpreportpkj.core.Util;
 import vpreportpkj.core.labrepo.AdvancedRepo;
-import vpreportpkj.starter.ReportProcessor;
+import vpreportpkj.core.ReportProcessor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class MainForm extends JFrame {
-    String version = "v1.3";
+    String version = "v1.4";
     private JPanel panel1;
     private JTextField chooseText;
     private JTextField outputDirText;
@@ -55,11 +55,14 @@ public class MainForm extends JFrame {
         //обязателен вызов после applySettings, иначе состояние ReportProcessor будет дефолтным
         //вызываем после отображения основной формы, могут быть месседж-боксы
         if (ReportProcessor.useFastRepo) {
+            setCursor(new Cursor(Cursor.WAIT_CURSOR));
+            switchActivity(false);
             initFastRepo();
             initRepo();
+            switchActivity(true);
+            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
     }
-
     private void applySettings() {
         chooseText.setText(prop.getProperty("chooseText"));
         outputDirText.setText(prop.getProperty("outputDirText"));
@@ -212,7 +215,7 @@ public class MainForm extends JFrame {
             labEngComm = LabourEngine.getInstance(repo.getAbsolutePath());
             ((AdvancedRepo) labEngComm.getRepository()).setUpdate(true);
             ((AdvancedRepo) labEngComm.getRepository()).setFilterFactor(4);
-            this.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+            ((AdvancedRepo) labEngComm.getRepository()).setSb(new StringBuilder());
             ReportProcessor.lec = labEngComm;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -221,11 +224,11 @@ public class MainForm extends JFrame {
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "IOException: repository file is out of reach");
         }
-        this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
     }
 
     public void initDealButton() {
         dealButton.addActionListener(e -> {
+
             String path1 = chooseText.getText();
             String path2 = outputDirText.getText();
             List<SingleTuple> wholeList = null;
@@ -265,7 +268,7 @@ public class MainForm extends JFrame {
                     ReportProcessor.pushToFileForList((outputDirText.getText() + "\\" + reportName.getText() + "_shifts.txt"),
                             periods);
                 } catch (Exception nsfe) {
-                    JOptionPane.showMessageDialog(null, nsfe.getMessage());
+                    JOptionPane.showMessageDialog(null, "Unexpected exception");
                     nsfe.printStackTrace();
                 }
             }
@@ -279,6 +282,16 @@ public class MainForm extends JFrame {
         getDealButton().setText("Создать отчет");
         getJMenuBar().getMenu(0).getItem(0).setText("Настройки...");
         getJMenuBar().getMenu(0).getItem(1).setText("Выход");
+    }
+
+    private void switchActivity(boolean isEnabled) {
+        setOutDirButton.setEnabled(isEnabled);
+        cdButton.setEnabled(isEnabled);
+        dealButton.setEnabled(isEnabled);
+        chooseText.setEnabled(isEnabled);
+        outputDirText.setEnabled(isEnabled);
+        reportName.setEnabled(isEnabled);
+        srnLabel.setEnabled(isEnabled);
     }
 
     public Properties getProp() {

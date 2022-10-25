@@ -129,7 +129,7 @@ public class LabourEngine {
         String mainKey = createKey(st);
         CyclicStorage<Integer> storage = fastRepo.get(mainKey);
         if (storage == null) {
-            storage = new CyclicStorage<>(new Integer[30]);
+            storage = new CyclicStorage<>(new Integer[32]);
             fastRepo.put(mainKey, storage);
         }
         storage.push(st.duration);

@@ -15,7 +15,7 @@ public class AdvancedRepo implements Serializable, LabourRepository {
     final private Map<String, AdvRepoFacility> repo;
     transient private int filterFactor;
     transient private boolean update;
-    StringBuilder sb = new StringBuilder();
+    transient StringBuilder sb = new StringBuilder();
 
     public AdvancedRepo(int capacity, int filterFactor, boolean update) {
         this.rowCapacity = capacity;
@@ -95,6 +95,10 @@ public class AdvancedRepo implements Serializable, LabourRepository {
 
     public void setUpdate(boolean update) {
         this.update = update;
+    }
+
+    public void setSb(StringBuilder sb) {
+        this.sb = sb;
     }
 
     //Класс, объединяющий в пару карту и циклический "счетчик". Поскольку карта не ограничена и не имеет отношения

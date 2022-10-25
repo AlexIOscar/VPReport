@@ -1,8 +1,4 @@
-package vpreportpkj.starter;
-
-import vpreportpkj.core.LabourEngine;
-import vpreportpkj.core.SingleTuple;
-import vpreportpkj.core.Util;
+package vpreportpkj.core;
 
 import javax.swing.*;
 import java.io.File;
@@ -25,6 +21,7 @@ public class ReportProcessor {
     private static int decrSuspTTo = 50;
     private static int CRMMethodIndex = 0;
     public static boolean useFastRepo = false;
+    public static boolean useRepository = false;
     private static boolean updateRepo = true;
     private static int filterFactor = 4;
     public static LabourEngine le;

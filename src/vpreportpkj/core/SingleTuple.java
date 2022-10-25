@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static vpreportpkj.core.Util.getFormattedDate;
+
 /**
  * Класс представляет собой кортеж данных, связанных с обработкой одиночной детали на VP-оборудовании
  */
@@ -17,6 +19,8 @@ public class SingleTuple {
     String position;
     String roll;
     double length;
+
+    //TODO рассмотреть возможность перевести на double
     int duration;
     int holeCount;
     double mass;
@@ -24,12 +28,13 @@ public class SingleTuple {
 
     /**
      * Метод генерации кортежа из входной специальным образом форматированной строки
+     *
      * @param line входная строка
      * @return сгенерированный кортеж
      * @throws NumberFormatException в случае, если генерация кортежа была прервана по причине некорректного
-     * форматирования строки или некорректного содержимого
+     *                               форматирования строки или некорректного содержимого
      */
-    public static SingleTuple generateTuple(String line) throws NumberFormatException{
+    public static SingleTuple generateTuple(String line) throws NumberFormatException {
         SingleTuple st = new SingleTuple();
         List<String> splitData = Arrays.stream(line.split(";"))
                 .map(String::trim)
@@ -66,6 +71,7 @@ public class SingleTuple {
 
     /**
      * Генерирует временную метку на основании поданных на вход троек даты и времени (тройки передаются как List)
+     *
      * @param date тройка даты
      * @param time тройка времени
      * @return Построенная временная метка
@@ -84,8 +90,8 @@ public class SingleTuple {
     @Override
     public String toString() {
         return "SingleTuple{" +
-                "completeTime=" + completeTime +
-                ", startTime=" + startTime +
+                "startTime=" + getFormattedDate(startTime) +
+                ", completeTime=" + getFormattedDate(completeTime) +
                 ", order='" + order + '\'' +
                 ", mark='" + mark + '\'' +
                 ", position='" + position + '\'' +
