@@ -85,7 +85,7 @@ public class LabourEngine {
         throw new IOException("Repository reading failure");
     }
 
-    public static LabourEngine getEmpty(String pathFastRepo, String pathRepo, LabourRepository lr){
+    public static LabourEngine getEmpty(String pathFastRepo, String pathRepo, LabourRepository lr) {
         LabourEngine out = new LabourEngine(pathFastRepo, pathRepo);
         out.fastRepo = new HashMap<>();
         out.repository = lr;

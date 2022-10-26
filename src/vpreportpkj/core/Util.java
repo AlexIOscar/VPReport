@@ -134,7 +134,7 @@ public class Util {
     }
 
     /**
-     * Преобразует файл сырого отчета по указанному пути в список отсортированных кортежей
+     * Преобразует файл сырого отчета по указанному пути в список неотсортированных кортежей
      *
      * @param path Путь размещения сырого отчета
      * @return Список кортежей
@@ -148,16 +148,14 @@ public class Util {
             SingleTuple tuple = SingleTuple.generateTuple(sign);
             tuples.add(tuple);
         }
-
-        tuples = Util.sortTuples(tuples);
         return tuples;
     }
 
     /**
-     * Получение единого списка кортежей по всем файлам, размещенным в директории, с обходом в глубину
+     * Получение единого сортированного списка кортежей по всем файлам, размещенным в директории, без обхода в глубину
      *
      * @param path Директория, по которой собираются данные
-     * @return Список кортежей
+     * @return Список отсортированных кортежей
      */
     public static List<SingleTuple> getCommonList(String path) {
 
@@ -171,10 +169,10 @@ public class Util {
             ioException.printStackTrace();
         }
 
-        List<SingleTuple> outList = new ArrayList<>();
         assert paths != null;
-        paths.forEach(p -> outList.addAll(getTuplesList(p.toString())));
-        return outList;
+        List<SingleTuple> finalOutList = new ArrayList<>();
+        paths.forEach(p -> finalOutList.addAll(getTuplesList(p.toString())));
+        return sortTuples(finalOutList);
     }
 
     /**

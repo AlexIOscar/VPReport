@@ -252,6 +252,7 @@ public class MainForm extends JFrame {
             }
 
             if (wholeList != null) {
+                //Util.resolveTime(wholeList);
                 List<List<SingleTuple>> periods;
                 try {
                     int[] shiftHrs = Util.getShiftsSplits(prop.getProperty("shiftTimes", "8:00; 20:00")).get(0);
