@@ -8,6 +8,8 @@ import vpreportpkj.core.ReportProcessor;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -18,7 +20,7 @@ import java.util.Properties;
 
 public class MainForm extends JFrame {
     String version = "v1.4";
-    private JPanel panel1;
+    private JPanel reportPane;
     private JTextField chooseText;
     private JTextField outputDirText;
     private JTextField reportName;
@@ -26,14 +28,20 @@ public class MainForm extends JFrame {
     private JButton cdButton;
     private JButton setOutDirButton;
     private JLabel srnLabel;
+    private JTabbedPane jtp;
+    private JPanel orderPane;
+    private JTextField orderField;
+    private JLabel OrdLabel;
+    private JButton ordProcButton;
+    private JTextArea outOrdData;
     private final Properties prop = new Properties();
     private File propFile;
     private LabourEngine labEng;
     private LabourEngine labEngComm;
 
     public MainForm() throws HeadlessException, IOException {
-        setContentPane(panel1);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        setContentPane(jtp);
 
         ImageIcon ii = new ImageIcon(MainForm.class.getResource("link.png"));
         setIconImage(ii.getImage());
@@ -45,6 +53,7 @@ public class MainForm extends JFrame {
         initChooseButton();
         initOutDirButton();
         initDealButton();
+        initOrdPrButton();
         initWindowListeners();
         initProperties();
         applySettings();
@@ -63,6 +72,16 @@ public class MainForm extends JFrame {
             setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
     }
+
+    private void initOrdPrButton() {
+        ordProcButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+    }
+
     private void applySettings() {
         chooseText.setText(prop.getProperty("chooseText"));
         outputDirText.setText(prop.getProperty("outputDirText"));
@@ -283,6 +302,7 @@ public class MainForm extends JFrame {
         getDealButton().setText("Создать отчет");
         getJMenuBar().getMenu(0).getItem(0).setText("Настройки...");
         getJMenuBar().getMenu(0).getItem(1).setText("Выход");
+        jtp.setTitleAt(0, "Отчет");
     }
 
     private void switchActivity(boolean isEnabled) {
