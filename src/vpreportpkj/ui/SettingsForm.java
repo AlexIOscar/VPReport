@@ -35,6 +35,8 @@ public class SettingsForm extends JFrame {
     private JCheckBox updRepoCB;
     private JTextField ffField;
     private JLabel ffLabel;
+    private JTextField timeCoeffField;
+    private JLabel timeCoeffLabel;
 
     public SettingsForm(String title, MainForm parent) throws HeadlessException {
         super(title);
@@ -73,6 +75,7 @@ public class SettingsForm extends JFrame {
         decrCBox.setSelected(Boolean.parseBoolean(props.getProperty("decrSPTbox", "false")));
         updRepoCB.setSelected(Boolean.parseBoolean(props.getProperty("updRepo", "true")));
         ffField.setText(props.getProperty("ff", "4"));
+        timeCoeffField.setText(props.getProperty("timeCoeff", "1.0"));
 
         //init changeable elements states
         bruteDecrRB.setEnabled(decrCBox.isSelected());
@@ -123,6 +126,7 @@ public class SettingsForm extends JFrame {
             props.setProperty("decrSPTbox", decrCBox.isSelected() ? "true" : "false");
             props.setProperty("ff", ffField.getText());
             props.setProperty("updRepo", updRepoCB.isSelected() ? "true" : "false");
+            props.setProperty("timeCoeff", timeCoeffField.getText());
 
             dispose();
         });
@@ -176,5 +180,6 @@ public class SettingsForm extends JFrame {
         decrCBox.setText("Адаптировать время выполнения операций");
         ffLabel.setText("Фильтр-фактор");
         updRepoCB.setText("Обновлять хранилище входящими данными");
+        timeCoeffLabel.setText("Коэффициент (времени)");
     }
 }

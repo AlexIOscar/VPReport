@@ -1,15 +1,10 @@
 package vpreportpkj.ui;
 
-import vpreportpkj.core.LabourEngine;
-import vpreportpkj.core.SingleTuple;
-import vpreportpkj.core.Util;
+import vpreportpkj.core.*;
 import vpreportpkj.core.labrepo.AdvancedRepo;
-import vpreportpkj.core.ReportProcessor;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -31,12 +26,18 @@ public class MainForm extends JFrame {
     private JTabbedPane jtp;
     private JPanel orderPane;
     private JTextField orderField;
-    private JLabel OrdLabel;
+    private JLabel ordLabel;
     private JButton ordProcButton;
     private JTextArea outOrdData;
+    private JTextArea orderSrcField;
+    private JButton orderSrcButton;
     private final Properties prop = new Properties();
     private File propFile;
+
+    //LE со "старой" версией репозитория (второй репозиторий остается пустым)
     private LabourEngine labEng;
+
+    //LE с "обновленной" версией репозитория (второй репозиторий остается пустым)
     private LabourEngine labEngComm;
 
     public MainForm() throws HeadlessException, IOException {
@@ -54,6 +55,7 @@ public class MainForm extends JFrame {
         initOutDirButton();
         initDealButton();
         initOrdPrButton();
+        initOrdSrcButton();
         initWindowListeners();
         initProperties();
         applySettings();
@@ -73,19 +75,11 @@ public class MainForm extends JFrame {
         }
     }
 
-    private void initOrdPrButton() {
-        ordProcButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
-        });
-    }
-
     private void applySettings() {
         chooseText.setText(prop.getProperty("chooseText"));
         outputDirText.setText(prop.getProperty("outputDirText"));
         reportName.setText(prop.getProperty("reportName", "Report"));
+        orderSrcField.setText(prop.getProperty("orderSrcDir"));
 
         this.setSize(Integer.parseInt(prop.getProperty("formWidth", "780")),
                 Integer.parseInt(prop.getProperty("formHeight", "260")));
@@ -153,6 +147,7 @@ public class MainForm extends JFrame {
                 prop.setProperty("chooseText", chooseText.getText());
                 prop.setProperty("outputDirText", outputDirText.getText());
                 prop.setProperty("reportName", reportName.getText());
+                prop.setProperty("orderSrcDir", orderSrcField.getText());
                 prop.setProperty("formWidth", String.valueOf(getWidth()));
                 prop.setProperty("formHeight", String.valueOf(getHeight()));
                 try {
@@ -219,21 +214,25 @@ public class MainForm extends JFrame {
     public void initRepo() {
         String dir = System.getProperty("user.home") + "\\VPRP\\";
         File repo = new File(dir + "pcRepo.dat");
+
+        int ff = Integer.parseInt(prop.getProperty("ff", "4"));
+        boolean upd = Boolean.parseBoolean(prop.getProperty("updRepo", "true"));
+
         if (!repo.exists()) {
             if (new File(dir).exists()) {
                 new File(dir).mkdir();
             }
             JOptionPane.showMessageDialog(this, "Repo file doesn't exist, probably it's your first start\n" +
                     "New repository will be created");
-            labEngComm = LabourEngine.getEmpty(null, repo.getAbsolutePath(), new AdvancedRepo(32, 4, true));
+            labEngComm = LabourEngine.getEmpty(null, repo.getAbsolutePath(), new AdvancedRepo(32, ff, upd));
             ReportProcessor.lec = labEngComm;
             return;
         }
 
         try {
             labEngComm = LabourEngine.getInstance(repo.getAbsolutePath());
-            ((AdvancedRepo) labEngComm.getRepository()).setUpdate(true);
-            ((AdvancedRepo) labEngComm.getRepository()).setFilterFactor(4);
+            ((AdvancedRepo) labEngComm.getRepository()).setUpdate(upd);
+            ((AdvancedRepo) labEngComm.getRepository()).setFilterFactor(ff);
             ((AdvancedRepo) labEngComm.getRepository()).setSb(new StringBuilder());
             ReportProcessor.lec = labEngComm;
         } catch (InterruptedException e) {
@@ -295,6 +294,57 @@ public class MainForm extends JFrame {
         });
     }
 
+    //на второй форме
+    private void initOrdPrButton() {
+        ordProcButton.addActionListener(e -> {
+            if (orderField.getText().equals("")) {
+                JOptionPane.showMessageDialog(this, "Поле \"заказ\" не должно быть пустым");
+                return;
+            }
+            outOrdData.setText("");
+            StringBuilder sb = new StringBuilder();
+            String[] paths = orderSrcField.getText().split("\n");
+
+            for (String path : paths) {
+                path = path.trim();
+                if (path.equals("")) {
+                    JOptionPane.showMessageDialog(null, "Directory area should contain at least one path");
+                }
+
+                double coeff;
+                try {
+                    coeff = Double.parseDouble(prop.getProperty("timeCoeff", "1.0"));
+                } catch (NumberFormatException nfe) {
+                    JOptionPane.showMessageDialog(this, "Неверный формат коэффициента времени");
+                    coeff = 1.0;
+                }
+
+                OrderSolver os = new OrderSolver(orderField.getText(), path,
+                        Integer.parseInt(prop.getProperty("whipLen", "12000")),
+                        Double.parseDouble(prop.getProperty("kim", "0.85")),
+                        Integer.parseInt(prop.getProperty("carRB", "50")));
+                sb.append("ProcTime, min: ").append(String.format("%.3f", os.getOrderTime(coeff, labEngComm) / 60)).append('\n');
+                sb.append("Pcs count: ").append(os.countPcs()).append('\n');
+            }
+            outOrdData.setText(sb.toString());
+        });
+    }
+
+    //на второй форме
+    private void initOrdSrcButton() {
+        orderSrcButton.addActionListener(e -> {
+            JFileChooser fc = new JFileChooser();
+            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int dialogResult = fc.showDialog(this, "Choose");
+            if (dialogResult == JFileChooser.APPROVE_OPTION) {
+                File selected = fc.getSelectedFile();
+                orderSrcField.setText(orderSrcField.getText()
+                        + (orderSrcField.getText().equals("") ? "" : '\n')
+                        + selected.getAbsolutePath());
+            }
+        });
+    }
+
     protected void initRusUI() {
         getSrnLabel().setText("Сохранить с именем");
         getCdButton().setText("Директория-источник");
@@ -303,6 +353,10 @@ public class MainForm extends JFrame {
         getJMenuBar().getMenu(0).getItem(0).setText("Настройки...");
         getJMenuBar().getMenu(0).getItem(1).setText("Выход");
         jtp.setTitleAt(0, "Отчет");
+        jtp.setTitleAt(1, "Заказ");
+        orderSrcButton.setText("Источник");
+        ordLabel.setText("Заказ");
+        ordProcButton.setText("Вычислить");
     }
 
     private void switchActivity(boolean isEnabled) {
