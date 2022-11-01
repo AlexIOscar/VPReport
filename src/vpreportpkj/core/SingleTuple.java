@@ -26,6 +26,23 @@ public class SingleTuple {
     double mass;
     int cuts;
 
+    public SingleTuple(){}
+
+    //конструктор копирования
+    public SingleTuple(SingleTuple inputSt) {
+        this.completeTime = new Date(inputSt.completeTime.getTime());
+        this.startTime = new Date(inputSt.startTime.getTime());
+        this.order = inputSt.order;
+        this.mark = inputSt.mark;
+        this.position = inputSt.position;
+        this.roll = inputSt.roll;
+        this.length = inputSt.length;
+        this.duration = inputSt.duration;
+        this.holeCount = inputSt.holeCount;
+        this.mass = inputSt.mass;
+        this.cuts = inputSt.cuts;
+    }
+
     /**
      * Метод генерации кортежа из входной специальным образом форматированной строки
      *

@@ -286,6 +286,9 @@ public class MainForm extends JFrame {
                             wholeList);
                     ReportProcessor.pushToFileForList((outputDirText.getText() + "\\" + reportName.getText() + "_shifts.txt"),
                             periods);
+                    //Дальше лист кортежей следует в измененном (resolved) состоянии!
+                    ReportProcessor.savePcsCSV((outputDirText.getText() + "\\" + reportName.getText() + "_pcs.csv"),
+                            Util.resolveTime(wholeList));
                 } catch (Exception nsfe) {
                     JOptionPane.showMessageDialog(null, "Unexpected exception");
                     nsfe.printStackTrace();
@@ -308,7 +311,8 @@ public class MainForm extends JFrame {
             for (String path : paths) {
                 path = path.trim();
                 if (path.equals("")) {
-                    JOptionPane.showMessageDialog(null, "Directory area should contain at least one path");
+                    JOptionPane.showMessageDialog(null, "Directory area should contain at least one path, can't " +
+                            "contain empty lines");
                 }
 
                 double coeff;
@@ -323,7 +327,8 @@ public class MainForm extends JFrame {
                         Integer.parseInt(prop.getProperty("whipLen", "12000")),
                         Double.parseDouble(prop.getProperty("kim", "0.85")),
                         Integer.parseInt(prop.getProperty("carRB", "50")));
-                sb.append("ProcTime, min: ").append(String.format("%.3f", os.getOrderTime(coeff, labEngComm) / 60)).append('\n');
+                sb.append("Processing time, min: ").append(String.format("%.3f",
+                        os.getOrderTime(coeff, labEngComm) / 60)).append('\n');
                 sb.append("Pcs count: ").append(os.countPcs()).append('\n');
             }
             outOrdData.setText(sb.toString());

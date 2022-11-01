@@ -53,11 +53,19 @@ public class AdvancedRepo implements Serializable, LabourRepository {
 
     @Override
     public int chkTime(SingleTuple st) {
+       return chkTime(st, update);
+    }
+
+    //перегруженный вариант, предназначенный для вызова с конкретным параметром update (что позволяет обходить
+    // значение, определенное классом)
+    public int chkTime(SingleTuple st, boolean update) {
         int exTime = getExpertTime(st);
         if (exTime != -1 && st.getDuration() / exTime > filterFactor) {
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела вверх
+            /*
             sb.append("expert time applied for ").append(st.getMark()).append(" ").append(st.getPosition()).append(" ");
             sb.append(exTime).append(" instead ").append(st.getDuration()).append('\n');
+             */
             return exTime;
         }
         if (update) {

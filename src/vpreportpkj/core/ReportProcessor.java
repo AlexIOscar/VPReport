@@ -1,5 +1,7 @@
 package vpreportpkj.core;
 
+import vpreportpkj.core.labrepo.AdvancedRepo;
+
 import javax.swing.*;
 import java.io.File;
 import java.io.FileWriter;
@@ -35,7 +37,6 @@ public class ReportProcessor {
      */
     public static void pushToFile(String outPath, List<SingleTuple> tuples) {
         List<String> rep = getReport(tuples, true, true);
-        //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
         File outF = new File(outPath);
 
         try (FileWriter writer = new FileWriter(outF, false)) {
@@ -58,13 +59,25 @@ public class ReportProcessor {
      */
     public static void pushToFileForList(String outPath, List<List<SingleTuple>> tuplesList) {
         List<String> rep = getReportForList(tuplesList, false, false);
-        //File outF = new File(outPath.replaceAll(".txt", "") + "_report.txt");
         File outF = new File(outPath);
 
         try (FileWriter writer = new FileWriter(outF, false)) {
             for (String str : rep) {
                 writer.write(str);
             }
+            writer.flush();
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    public static void savePcsCSV(String outPath, List<SingleTuple> tuples) {
+        String str = generatePcsCSV(tuples);
+        File outF = new File(outPath);
+
+        try (FileWriter writer = new FileWriter(outF, false)) {
+            writer.write(str);
             writer.flush();
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, ex.getMessage());
@@ -285,6 +298,26 @@ public class ReportProcessor {
         if (!detected) {
             System.out.println("No cases of triple overlaying were detected");
         }
+    }
+
+    private static String generatePcsCSV(List<SingleTuple> tuples) {
+        StringBuilder sb = new StringBuilder();
+        //sb.append("order;mark;position;start;complete;duration;mass;length;holes;cuts;roll\n");
+        sb.append("Заказ;Марка;Позиция;Старт;Окончание;Время,сек;Время(фильтр),сек;Масса,кг;Длина,мм;Отверстий;Рубов;" +
+                "Прокат\n");
+        tuples.forEach(t -> sb.append(t.getOrder()).append(';')
+                .append(t.getMark()).append(';')
+                .append(t.getPosition()).append(';')
+                .append(Util.getFormattedDate(t.getStartTime())).append(';')
+                .append(Util.getFormattedDate(t.getCompleteTime())).append(';')
+                .append(t.getDuration()).append(';')
+                .append(((AdvancedRepo) lec.getRepository()).chkTime(t, false)).append(';')
+                .append(t.mass).append(';')
+                .append(t.length).append(';')
+                .append(t.holeCount).append(';')
+                .append(t.cuts).append(';')
+                .append(t.roll).append('\n'));
+        return sb.toString();
     }
 
     public static void setSingleRBTime(int singleRBTime) {

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Util {
-    private static final String dateFormatter = "MM/dd/yyyy-HH.mm.ss";
+    private static final String dateFormatter = "dd/MM/yyyy—HH.mm.ss";
 
     /**
      * Метод, разбивающий входной список кортежей на части. Каждая часть содержит только
@@ -202,7 +202,8 @@ public class Util {
         return out;
     }
 
-    //Изменяет входящий лист!
+    //Изменяет входящий лист! То есть, необязательно использовать возврат, потому что он указывает на тот же объект
+    //который передавался на вход
     public static List<SingleTuple> resolveTime(List<SingleTuple> inputList) {
         if (inputList.size() < 2) {
             return inputList;
@@ -211,9 +212,21 @@ public class Util {
         for (int i = 0; i < inputList.size() - 1; i++) {
             SingleTuple thisOne = inputList.get(i);
             SingleTuple nextOne = inputList.get(i + 1);
+
             if (thisOne.getCompleteTime().before(nextOne.getStartTime())) {
                 continue;
             }
+
+            //not so simple(
+            /*
+            if (thisOne.getCompleteTime().after(nextOne.getCompleteTime())) {
+                Date buffer = thisOne.getCompleteTime();
+                thisOne.completeTime = nextOne.completeTime;
+                nextOne.completeTime = buffer;
+            }
+
+             */
+
             long overlap = thisOne.getCompleteTime().getTime() - nextOne.getStartTime().getTime();
             if (overlap == 0) {
                 continue;

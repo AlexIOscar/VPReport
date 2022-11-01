@@ -199,8 +199,10 @@ public class LabourEngine {
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела, возвращаем
             // значение из репозитория
             if ((st.duration / exTime > filterFactor || exTime / st.duration > filterFactor)) {
+                /*
                 System.out.print("expert time applied for " + st.mark + " " + st.position + " ");
                 System.out.println(exTime + " instead " + st.duration);
+                 */
                 return exTime;
             }
         }
