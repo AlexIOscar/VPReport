@@ -289,6 +289,7 @@ public class MainForm extends JFrame {
                     //Дальше лист кортежей следует в измененном (resolved) состоянии!
                     ReportProcessor.savePcsCSV((outputDirText.getText() + "\\" + reportName.getText() + "_pcs.csv"),
                             Util.resolveTime(wholeList));
+
                 } catch (Exception nsfe) {
                     JOptionPane.showMessageDialog(null, "Unexpected exception");
                     nsfe.printStackTrace();

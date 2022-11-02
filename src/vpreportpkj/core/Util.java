@@ -120,9 +120,9 @@ public class Util {
     }
 
     /**
-     * Метод сортирует кортежи по дате начала выполнения операции (содержащейся в кортеже). Предназначен для того,
-     * чтоб исключить возможность перекрытия "потерянного" промежутка кортежами, отстоящими от текущего
-     * дальше, чем следующий (тупое объяснение, но лучшую формулировку сложно придумать)
+     * Метод сортирует кортежи по дате начала выполнения операции (содержащейся в кортеже).
+     * Важно! Нарушать порядок сортировки (менять компаратор), заданный в этом методе, нельзя, без переработки метода
+     * splitPeriods - это приведет к появлению "дребезга" на границах "смен".
      *
      * @param inputList входящий неотсортированный кортеж
      * @return исходящий отсортированный кортеж
@@ -170,6 +170,7 @@ public class Util {
         }
 
         assert paths != null;
+        Collections.reverse(paths);
         List<SingleTuple> finalOutList = new ArrayList<>();
         paths.forEach(p -> finalOutList.addAll(getTuplesList(p.toString())));
         return sortTuples(finalOutList);
@@ -202,43 +203,93 @@ public class Util {
         return out;
     }
 
-    //Изменяет входящий лист! То есть, необязательно использовать возврат, потому что он указывает на тот же объект
-    //который передавался на вход
+    //Изменяет кортежи во входящем листе!
     public static List<SingleTuple> resolveTime(List<SingleTuple> inputList) {
-        if (inputList.size() < 2) {
-            return inputList;
+        List<List<SingleTuple>> bundles = splitToBundles(inputList);
+        return bundles.stream().peek(Util::resolveBundle).flatMap(Collection::stream).collect(Collectors.toList());
+    }
+
+    private static List<List<SingleTuple>> splitToBundles(List<SingleTuple> inputList) {
+        List<List<SingleTuple>> bundles = new ArrayList<>();
+
+        if (inputList.size() == 0) {
+            bundles.add(new ArrayList<>());
+            return bundles;
         }
+
         inputList = sortTuples(inputList);
-        for (int i = 0; i < inputList.size() - 1; i++) {
-            SingleTuple thisOne = inputList.get(i);
-            SingleTuple nextOne = inputList.get(i + 1);
 
-            if (thisOne.getCompleteTime().before(nextOne.getStartTime())) {
-                continue;
+        for (int i = 0; i < inputList.size(); i++) {
+            List<SingleTuple> buffer = new ArrayList<>();
+            buffer.add(inputList.get(i));
+            Date latestInGroup = inputList.get(i).completeTime;
+            for (int j = i + 1; j < inputList.size(); j++) {
+                if (inputList.get(j).getStartTime().after(latestInGroup)) {
+                    i = j - 1;
+                    break;
+                }
+                buffer.add(inputList.get(j));
+                if (inputList.get(j).completeTime.after(latestInGroup)) {
+                    latestInGroup = inputList.get(j).completeTime;
+                }
             }
-
-            //not so simple(
-            /*
-            if (thisOne.getCompleteTime().after(nextOne.getCompleteTime())) {
-                Date buffer = thisOne.getCompleteTime();
-                thisOne.completeTime = nextOne.completeTime;
-                nextOne.completeTime = buffer;
-            }
-
-             */
-
-            long overlap = thisOne.getCompleteTime().getTime() - nextOne.getStartTime().getTime();
-            if (overlap == 0) {
-                continue;
-            }
-            thisOne.getCompleteTime().setTime(thisOne.getCompleteTime().getTime() - (overlap / 2));
-            nextOne.getStartTime().setTime(nextOne.getStartTime().getTime() + (overlap / 2));
-            thisOne.duration = (int) ((thisOne.getCompleteTime().getTime() - thisOne.getStartTime().getTime()) / 1000);
+            bundles.add(buffer);
         }
-        //последний элемент - duration пересчитывается отдельно
-        SingleTuple lastOne = inputList.get(inputList.size() - 1);
-        lastOne.duration = (int) ((lastOne.getCompleteTime().getTime() - lastOne.getStartTime().getTime()) / 1000);
-        return inputList;
+        return bundles;
+    }
+
+    /**
+     * Метод предназначен для перераспределения времени между деталями внутри списка таким образом, чтобы таймлайн
+     * был занят всеми деталями, вошедшими в список, без перекрытия и плотно (без пустот, и с "касанием" границ)
+     *
+     * @param bundle Специально подготовленный список кортежей, отвечающий требованиям: 1) он уже отсортирован по
+     *               стартовому времени 2) он не содержит внутренних "пустот" в общем таймлайне. Внутри метода это
+     *               никак не проверяется, и должно быть обеспечено клиентским кодом
+     */
+    private static void resolveBundle(List<SingleTuple> bundle) {
+
+        if (bundle.size() < 2) {
+            return;
+        }
+
+        int totalDur = bundle.stream().mapToInt(t -> t.duration).sum();
+        if (totalDur == 0) {
+            return;
+        }
+
+        Date start = bundle.get(0).startTime;
+        Date complete = bundle.get(0).completeTime;
+        for (int i = 1; i < bundle.size(); i++) {
+            if (bundle.get(i).completeTime.after(complete)) {
+                complete = bundle.get(i).completeTime;
+            }
+        }
+        long timeFund = (complete.getTime() - start.getTime()) / 1000;
+        double coeff = ((double) timeFund) / totalDur;
+
+        //двигаем время окончания нулевого кортежа в соответствии с пересчитанной длительностью
+        long firstDur = Math.round(bundle.get(0).duration * coeff);
+        bundle.get(0).completeTime = new Date(bundle.get(0).startTime.getTime() + firstDur * 1000);
+        bundle.get(0).duration = bundle.get(0).getDurViaCount();
+
+        for (int i = 1; i < bundle.size(); i++) {
+            SingleTuple st = bundle.get(i);
+            long resolvedDur = Math.round(st.duration * coeff);
+            st.startTime = bundle.get(i - 1).getCompleteTime();
+            //st.duration = (int) resolvedDur;
+            if (i == bundle.size() - 1) {
+                st.duration = st.getDurViaCount();
+                break;
+            }
+            st.completeTime = new Date(st.startTime.getTime() + resolvedDur * 1000);
+            st.duration = st.getDurViaCount();
+        }
+
+        int totalDurAfter = bundle.stream().mapToInt(t -> t.duration).sum();
+        if (totalDurAfter != timeFund) {
+            System.out.println("Duration violation: " + totalDurAfter + " " + timeFund);
+        }
+
     }
 
     public static String getFormattedDate(Date date) {

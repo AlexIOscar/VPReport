@@ -230,8 +230,11 @@ public class LabourEngine {
         int exTime = getExpertTime(st);
         if (exTime != -1 && st.duration / exTime > filterFactor) {
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела вверх
+            /*
             System.out.print("expert time applied for " + st.mark + " " + st.position + " ");
             System.out.println(exTime + " instead " + st.duration);
+
+             */
             return exTime;
         }
         if (update) {

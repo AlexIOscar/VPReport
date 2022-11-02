@@ -119,6 +119,10 @@ public class SingleTuple {
                 '}';
     }
 
+    public int getDurViaCount(){
+        return (int) ((this.completeTime.getTime() - this.startTime.getTime())/1000);
+    }
+
     public Date getCompleteTime() {
         return completeTime;
     }
