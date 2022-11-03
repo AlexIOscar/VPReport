@@ -53,14 +53,14 @@ public class AdvancedRepo implements Serializable, LabourRepository {
 
     @Override
     public int chkTime(SingleTuple st) {
-       return chkTime(st, update);
+        return chkTime(st, update);
     }
 
     //перегруженный вариант, предназначенный для вызова с конкретным параметром update (что позволяет обходить
     // значение, определенное классом)
     public int chkTime(SingleTuple st, boolean update) {
         int exTime = getExpertTime(st);
-        if (exTime != -1 && st.getDuration() / exTime > filterFactor) {
+        if (exTime != -1 && exTime != 0 && st.getDuration() / exTime > filterFactor) {
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела вверх
             /*
             sb.append("expert time applied for ").append(st.getMark()).append(" ").append(st.getPosition()).append(" ");
@@ -112,10 +112,11 @@ public class AdvancedRepo implements Serializable, LabourRepository {
     //Класс, объединяющий в пару карту и циклический "счетчик". Поскольку карта не ограничена и не имеет отношения
     // порядка, счетчик служит для того, чтобы знать (и удалять) самое старое значение в карты. Посредством этого
     //механизма обеспечивается нерасширяемость карты свыше фиксированного количества хранимых пар key-value
-    static class AdvRepoFacility implements Serializable{
+    static class AdvRepoFacility implements Serializable {
         private static final long serialVersionUID = 1L;
         private final CyclicStorage<Long> cyclic;
         private final Map<Long, Integer> storage;
+
         public AdvRepoFacility(int capacity) {
             cyclic = new CyclicStorage<>(new Long[capacity]);
             storage = new HashMap<>(capacity);

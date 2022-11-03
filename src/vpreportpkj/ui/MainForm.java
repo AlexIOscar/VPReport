@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class MainForm extends JFrame {
-    String version = "v1.4";
+    String version = "v1.5";
     private JPanel reportPane;
     private JTextField chooseText;
     private JTextField outputDirText;
@@ -54,7 +54,7 @@ public class MainForm extends JFrame {
         initChooseButton();
         initOutDirButton();
         initDealButton();
-        initOrdPrButton();
+        initOrdProcButton();
         initOrdSrcButton();
         initWindowListeners();
         initProperties();
@@ -286,7 +286,7 @@ public class MainForm extends JFrame {
                             wholeList);
                     ReportProcessor.pushToFileForList((outputDirText.getText() + "\\" + reportName.getText() + "_shifts.txt"),
                             periods);
-                    //Дальше лист кортежей следует в измененном (resolved) состоянии!
+                    //Дальше ввиду вызова resolveTime кортежи, "участвующие" в расчете, будут изменены!
                     ReportProcessor.savePcsCSV((outputDirText.getText() + "\\" + reportName.getText() + "_pcs.csv"),
                             Util.resolveTime(wholeList));
 
@@ -299,7 +299,7 @@ public class MainForm extends JFrame {
     }
 
     //на второй форме
-    private void initOrdPrButton() {
+    private void initOrdProcButton() {
         ordProcButton.addActionListener(e -> {
             if (orderField.getText().equals("")) {
                 JOptionPane.showMessageDialog(this, "Поле \"заказ\" не должно быть пустым");

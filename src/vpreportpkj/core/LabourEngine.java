@@ -228,7 +228,7 @@ public class LabourEngine {
      */
     public int chkTimeAdv(SingleTuple st, int filterFactor, boolean update) {
         int exTime = getExpertTime(st);
-        if (exTime != -1 && st.duration / exTime > filterFactor) {
+        if (exTime != -1 && exTime != 0 && st.duration / exTime > filterFactor) {
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела вверх
             /*
             System.out.print("expert time applied for " + st.mark + " " + st.position + " ");

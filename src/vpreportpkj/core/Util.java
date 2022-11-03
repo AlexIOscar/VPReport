@@ -260,36 +260,32 @@ public class Util {
         Date start = bundle.get(0).startTime;
         Date complete = bundle.get(0).completeTime;
         for (int i = 1; i < bundle.size(); i++) {
-            if (bundle.get(i).completeTime.after(complete)) {
-                complete = bundle.get(i).completeTime;
+            Date completeThis = bundle.get(i).completeTime;
+            if (completeThis.after(complete)) {
+                complete = completeThis;
             }
         }
         long timeFund = (complete.getTime() - start.getTime()) / 1000;
         double coeff = ((double) timeFund) / totalDur;
 
         //двигаем время окончания нулевого кортежа в соответствии с пересчитанной длительностью
-        long firstDur = Math.round(bundle.get(0).duration * coeff);
+        long firstDur = (long) Math.floor(bundle.get(0).duration * coeff);
         bundle.get(0).completeTime = new Date(bundle.get(0).startTime.getTime() + firstDur * 1000);
         bundle.get(0).duration = bundle.get(0).getDurViaCount();
 
         for (int i = 1; i < bundle.size(); i++) {
             SingleTuple st = bundle.get(i);
-            long resolvedDur = Math.round(st.duration * coeff);
+            long resolvedDur = (long) Math.floor(st.duration * coeff);
             st.startTime = bundle.get(i - 1).getCompleteTime();
             //st.duration = (int) resolvedDur;
             if (i == bundle.size() - 1) {
+                st.completeTime = complete;
                 st.duration = st.getDurViaCount();
                 break;
             }
             st.completeTime = new Date(st.startTime.getTime() + resolvedDur * 1000);
             st.duration = st.getDurViaCount();
         }
-
-        int totalDurAfter = bundle.stream().mapToInt(t -> t.duration).sum();
-        if (totalDurAfter != timeFund) {
-            System.out.println("Duration violation: " + totalDurAfter + " " + timeFund);
-        }
-
     }
 
     public static String getFormattedDate(Date date) {
