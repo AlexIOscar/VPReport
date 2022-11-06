@@ -16,8 +16,8 @@ public class DebugMain {
         AdvancedRepo repo = (AdvancedRepo) instance.getRepository();
         repo.setUpdate(false);
         repo.setFilterFactor(2);
-        for (SingleTuple st: commonList
-             ) {
+        for (SingleTuple st : commonList
+        ) {
             System.out.println(repo.chkTime(st));
         }
     }

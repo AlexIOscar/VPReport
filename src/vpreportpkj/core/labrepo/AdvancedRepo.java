@@ -4,8 +4,8 @@ import vpreportpkj.core.LabourEngine.CyclicStorage;
 import vpreportpkj.core.SingleTuple;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static vpreportpkj.core.LabourEngine.createKey;
 
@@ -88,8 +88,14 @@ public class AdvancedRepo implements Serializable, LabourRepository {
         if (storage.isEmpty()) {
             return -1;
         }
+        /*
         int sum = storage.values().stream().mapToInt(i -> i).sum();
         return sum / storage.size();
+         */
+        //медианное значение
+        Integer[] sorted = storage.values().toArray(new Integer[0]);
+        Arrays.sort(sorted);
+        return sorted[sorted.length / 2 - 1 + sorted.length % 2];
     }
 
     @Override

@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntFunction;
 
 public class LabourEngine {
 
@@ -166,6 +167,7 @@ public class LabourEngine {
             //клиентский код должен рассматривать -1 как отсутствие результата
             return -1;
         }
+        /*
         AtomicInteger notZeroCases = new AtomicInteger();
         int sum =
                 Arrays.stream(storage).filter(Objects::nonNull).peek(t -> notZeroCases.getAndIncrement()).mapToInt(i -> i).sum();
@@ -174,6 +176,9 @@ public class LabourEngine {
         } else {
             return -1;
         }
+         */
+        Integer[] sorted = Arrays.stream(storage).filter(Objects::nonNull).sorted().toArray(Integer[]::new);
+        return sorted[sorted.length / 2 - 1 + sorted.length % 2];
     }
 
     /**
