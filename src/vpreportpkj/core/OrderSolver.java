@@ -1,4 +1,6 @@
 package vpreportpkj.core;
+import vpreportpkj.core.labrepo.AdvancedRepo;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +37,7 @@ public class OrderSolver {
 
     private void filterViaRepo(List<SingleTuple> tuples, LabourEngine le) {
         for (SingleTuple st : tuples) {
-            int expTime = le.getRepository().chkTime(st);
+            int expTime = ((AdvancedRepo)le.getRepository()).chkTime(st, false);
             if (expTime == st.getDuration()) {
                 continue;
             }

@@ -101,7 +101,7 @@ public class MainForm extends JFrame {
             ReportProcessor.setCRMMethodIndex(Integer.parseInt(prop.getProperty("CRBMethod", "0")));
             ReportProcessor.useFastRepo = Boolean.parseBoolean(prop.getProperty("useRepoRB", "false"));
             ReportProcessor.setUpdateRepo(Boolean.parseBoolean(prop.getProperty("updRepo", "true")));
-            ReportProcessor.setFilterFactor(Integer.parseInt(prop.getProperty("ff", "4")));
+            ReportProcessor.setFilterFactor(Double.parseDouble(prop.getProperty("ff", "4.0")));
         } catch (NumberFormatException nfe) {
             JOptionPane.showMessageDialog(this, "Wrong settings format, check settings values");
         }
@@ -215,7 +215,7 @@ public class MainForm extends JFrame {
         String dir = System.getProperty("user.home") + "\\VPRP\\";
         File repo = new File(dir + "pcRepo.dat");
 
-        int ff = Integer.parseInt(prop.getProperty("ff", "4"));
+        double ff = Double.parseDouble(prop.getProperty("ff", "4.0"));
         boolean upd = Boolean.parseBoolean(prop.getProperty("updRepo", "true"));
 
         if (!repo.exists()) {

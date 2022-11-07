@@ -101,7 +101,7 @@ public class SettingsForm extends JFrame {
                 ReportProcessor.setCRMMethodIndex(CRBMcomboBox.getSelectedIndex());
                 ReportProcessor.useFastRepo = smartDecrRB.isSelected();
                 ReportProcessor.setUpdateRepo(updRepoCB.isSelected());
-                ReportProcessor.setFilterFactor(Integer.parseInt(ffField.getText()));
+                ReportProcessor.setFilterFactor(Double.parseDouble(ffField.getText()));
                 if (smartDecrRB.isSelected() && smartDecrRB.isEnabled()) {
                     mf.initFastRepo();
                 }

@@ -193,7 +193,7 @@ public class LabourEngine {
      * @param defaultValue значение по умолчанию, применяемое если в репозитории ничего нет, а время подозрительное
      * @return экспертное время
      */
-    public int chkTimeWithUpd(SingleTuple st, int filterFactor, int maxVal, int defaultValue) {
+    public int chkTimeWithUpd(SingleTuple st, double filterFactor, int maxVal, int defaultValue) {
         int exTime = getExpertTime(st);
         //если длительность свыше подозрительной
         if (st.duration > maxVal) {
@@ -203,7 +203,7 @@ public class LabourEngine {
             }
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела, возвращаем
             // значение из репозитория
-            if ((st.duration / exTime > filterFactor || exTime / st.duration > filterFactor)) {
+            if (((double)st.duration / exTime > filterFactor || (double)exTime / st.duration > filterFactor)) {
                 /*
                 System.out.print("expert time applied for " + st.mark + " " + st.position + " ");
                 System.out.println(exTime + " instead " + st.duration);
@@ -231,9 +231,9 @@ public class LabourEngine {
      * @param update       если true, то заносить значение в репозиторий, если false - то не изменять репозиторий
      * @return экспертное время
      */
-    public int chkTimeAdv(SingleTuple st, int filterFactor, boolean update) {
+    public int chkTimeAdv(SingleTuple st, double filterFactor, boolean update) {
         int exTime = getExpertTime(st);
-        if (exTime != -1 && exTime != 0 && st.duration / exTime > filterFactor) {
+        if (exTime != -1 && exTime != 0 && (double) st.duration / exTime > filterFactor) {
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела вверх
             /*
             System.out.print("expert time applied for " + st.mark + " " + st.position + " ");

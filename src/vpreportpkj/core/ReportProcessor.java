@@ -11,6 +11,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Если есть желание дальше развивать проект, то этот класс нужно как можно быстрее переработать под
+ * instance-использование.
+ * В своём утилитном виде он существует по историческим причинам, и это дает определенные проблемы.
+ */
 public class ReportProcessor {
     //характеристики, влияющие на оценочные показатели в отчете
     private static int singleRBTime = 50;
@@ -25,7 +30,7 @@ public class ReportProcessor {
     public static boolean useFastRepo = false;
     public static boolean useRepository = false;
     private static boolean updateRepo = true;
-    private static int filterFactor = 4;
+    private static double filterFactor = 4;
     public static LabourEngine le;
     public static LabourEngine lec;
 
@@ -360,7 +365,7 @@ public class ReportProcessor {
         ReportProcessor.updateRepo = updateRepo;
     }
 
-    public static void setFilterFactor(int filterFactor) {
+    public static void setFilterFactor(double filterFactor) {
         ReportProcessor.filterFactor = filterFactor;
     }
 }

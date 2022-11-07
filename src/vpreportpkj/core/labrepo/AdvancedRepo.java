@@ -13,11 +13,11 @@ public class AdvancedRepo implements Serializable, LabourRepository {
     private static final long serialVersionUID = 1L;
     private final int rowCapacity;
     final private Map<String, AdvRepoFacility> repo;
-    transient private int filterFactor;
+    transient private double filterFactor;
     transient private boolean update;
     transient StringBuilder sb = new StringBuilder();
 
-    public AdvancedRepo(int capacity, int filterFactor, boolean update) {
+    public AdvancedRepo(int capacity, double filterFactor, boolean update) {
         this.rowCapacity = capacity;
         this.repo = new HashMap<>();
         this.filterFactor = filterFactor;
@@ -60,7 +60,7 @@ public class AdvancedRepo implements Serializable, LabourRepository {
     // значение, определенное классом)
     public int chkTime(SingleTuple st, boolean update) {
         int exTime = getExpertTime(st);
-        if (exTime != -1 && exTime != 0 && st.getDuration() / exTime > filterFactor) {
+        if (exTime != -1 && exTime != 0 && (double) st.getDuration() / exTime > filterFactor) {
             //если данные от репозитория есть, а значение-кандидат отличается от него сверх предела вверх
             /*
             sb.append("expert time applied for ").append(st.getMark()).append(" ").append(st.getPosition()).append(" ");
@@ -103,7 +103,7 @@ public class AdvancedRepo implements Serializable, LabourRepository {
         return sb;
     }
 
-    public void setFilterFactor(int filterFactor) {
+    public void setFilterFactor(double filterFactor) {
         this.filterFactor = filterFactor;
     }
 
