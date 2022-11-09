@@ -15,6 +15,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * Если есть желание дальше развивать проект, то этот класс нужно как можно быстрее переработать под
  * instance-использование.
  * В своём утилитном виде он существует по историческим причинам, и это дает определенные проблемы.
+ * А еще лучше сделать полностью новый, с более вменяемым API, не имеющим зависимости от порядка фильтраций, вызова
+ * ресолвера времени, однотипно использующий флаги (например, обучения репозиториев), с выбором языка и тому подобное.
+ * В этом же можно оставить только утилитные вещи, вроде вывода в файл.
  */
 public class ReportProcessor {
     //характеристики, влияющие на оценочные показатели в отчете
@@ -79,6 +82,19 @@ public class ReportProcessor {
 
     public static void savePcsCSV(String outPath, List<SingleTuple> tuples) {
         String str = generatePcsCSV(tuples);
+        File outF = new File(outPath);
+
+        try (FileWriter writer = new FileWriter(outF, false)) {
+            writer.write(str);
+            writer.flush();
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    public static void saveShiftsCSV(String outPath, List<List<SingleTuple>> shifts, double coeff, int shiftDuration) {
+        String str = generateShiftsCSV(shifts, coeff, shiftDuration);
         File outF = new File(outPath);
 
         try (FileWriter writer = new FileWriter(outF, false)) {
@@ -249,6 +265,55 @@ public class ReportProcessor {
             out.addAll(report);
         }
         return out;
+    }
+
+    /**
+     * Генерирует CSV-сводку для смен.
+     * Для простоты внутренней реализации, операционное время получается сложением времен всех деталей, поэтому перед
+     * использованием этого метода НЕОБХОДИМО вызвать Util.resolveTime на совокупности всех кортежей, которые будут
+     * здесь обработаны, иначе будет получено завышенное операционное время (из-за наложений времен в сырых данных)
+     *
+     * @param shifts смены
+     * @param coeff  коэффициент увеличения рабочего времени
+     * @return semicolon-separated текст
+     */
+    public static String generateShiftsCSV(List<List<SingleTuple>> shifts, double coeff, int shiftDuration) {
+        StringBuilder sb = new StringBuilder("Начало;Окончание;Масса,кг;Длина,мм;Деталей;Откатов каретки;" +
+                "Отверстий;Машинное время,мин;Рабочее время,мин;Полное время,мин;Коэфф.загрузки(пв),%;Коэфф.загрузки" +
+                "(св),%\n");
+        shifts.forEach(sh -> {
+            int shiftSize = sh.size();
+            if (shiftSize == 0) {
+                return;
+            }
+            Date startShift = sh.get(0).startTime;
+            Date endShift = sh.get(shiftSize - 1).getCompleteTime();
+            long uptime = (endShift.getTime() - startShift.getTime()) / 1000;
+            AtomicLong extractedOpTime = new AtomicLong();
+            sh.forEach(t -> extractedOpTime.addAndGet(((AdvancedRepo) lec.getRepository()).chkTime(t, false)));
+            int rollbacks = sh.stream().mapToInt(t -> t.cuts).sum() - shiftSize;
+            long opTime = extractedOpTime.get();
+            long workTime = (long) (opTime + ((long) rollbacks * singleRBTime) * coeff);
+            int totalHoles = sh.stream().mapToInt(t -> t.holeCount).sum();
+            double totalLen = sh.stream().mapToDouble(t -> t.length).sum();
+            double totalMass = sh.stream().mapToDouble(SingleTuple::getMass).sum();
+            double workload1 = (double) workTime * 100 / uptime;
+            double workload2 = (double) workTime * 100 / (shiftDuration * 60);
+
+            sb.append(Util.getFormattedDate(startShift)).append(';')
+                    .append(Util.getFormattedDate(endShift)).append(';')
+                    .append(String.format("%.3f", totalMass)).append(';')
+                    .append(String.format("%.3f", totalLen)).append(';')
+                    .append(shiftSize).append(';')
+                    .append(rollbacks).append(';')
+                    .append(totalHoles).append(';')
+                    .append(opTime / 60).append(';')
+                    .append(workTime / 60).append(';')
+                    .append(uptime / 60).append(';')
+                    .append(String.format("%.3f", workload1)).append(';')
+                    .append(String.format("%.3f", workload2)).append('\n');
+        });
+        return sb.toString();
     }
 
     /**

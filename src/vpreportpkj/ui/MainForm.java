@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class MainForm extends JFrame {
-    String version = "v1.5";
+    String version = "v1.6";
     private JPanel reportPane;
     private JTextField chooseText;
     private JTextField outputDirText;
@@ -289,6 +289,11 @@ public class MainForm extends JFrame {
                     //Дальше ввиду вызова resolveTime кортежи, "участвующие" в расчете, будут изменены!
                     ReportProcessor.savePcsCSV((outputDirText.getText() + "\\" + reportName.getText() + "_pcs.csv"),
                             Util.resolveTime(wholeList));
+                    //К этому времени все кортежи уже resolved, так что можно вызывать создание csv для смен (раньше
+                    // этого делать нельзя по причине наложения времени в кортежах)
+                    ReportProcessor.saveShiftsCSV((outputDirText.getText() + "\\" + reportName.getText() + "_shtbl.csv"),
+                            periods, Double.parseDouble(prop.getProperty("timeCoeff", "1.2")),
+                            Integer.parseInt(prop.getProperty("shiftDur", "675")));
 
                 } catch (Exception nsfe) {
                     JOptionPane.showMessageDialog(null, "Unexpected exception");
